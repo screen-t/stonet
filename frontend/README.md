@@ -1,22 +1,14 @@
-# Welcome to your Lovable project
+# SM1 (B2B) Frontend
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+This is the frontend application for the SM1 (B2B) professional networking platform.
 
 ## How can I edit this code?
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
 **Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Clone this repo and push changes to collaborate with your team.
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
@@ -62,12 +54,28 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+Deploy using Vercel, Netlify, or any static hosting service that supports Vite applications.
 
-## Can I connect a custom domain to my Lovable project?
+### Deployment Steps
 
-Yes, you can!
+1. Build the project:
+   ```bash
+   npm run build
+   ```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+2. Deploy the `dist` folder to your hosting service
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+### Recommended Hosting Platforms
+
+- **Vercel**: Connect your GitHub repo for automatic deployments
+- **Netlify**: Drag and drop the `dist` folder or connect via Git
+- **Cloudflare Pages**: Fast global CDN with automatic deployments
+- **AWS S3 + CloudFront**: For AWS infrastructure
+
+## Custom Domain Setup
+
+Most hosting platforms support custom domain configuration. Check your platform's documentation:
+
+- Vercel: Project Settings > Domains
+- Netlify: Site Settings > Domain Management
+- Cloudflare Pages: Custom Domains section
