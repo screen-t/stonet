@@ -4,10 +4,10 @@
 
 **Project Name:** Stonet - Professional Networking Platform  
 **Project Start Date:** January 20, 2026  
-**Target Launch Date:** March 15, 2026 (8 weeks)  
+**Target Launch Date:** March 13, 2026 (7 weeks, 5 days)  
 **Project Type:** Web Application (Professional Networking Platform)  
 **Budget:** TBD  
-**Project Manager:** TBD  
+**Project Manager:** Daniel  
 
 ## Executive Summary
 
@@ -54,8 +54,8 @@ Stonet is a modern professional networking platform designed for entrepreneurs, 
 ## Stakeholders
 
 ### Internal Stakeholders
-- **Project Sponsor:** TBD
-- **Project Manager:** TBD
+- **Project Sponsor:** Jivak ( Founder & CEO )
+- **Project Manager:** Daniel
 - **Technical Lead:** TBD
 - **Frontend Lead:** TBD
 - **Backend Lead:** TBD
@@ -90,7 +90,7 @@ Stonet is a modern professional networking platform designed for entrepreneurs, 
 - Email notifications
 - Push notifications
 
-### Phase 4: Polish & Testing (Week 7-8) - Mar 3 - Mar 15
+### Phase 4: Polish & Testing (Week 7-8) - Mar 3 - Mar 12
 - Comprehensive testing (Unit, Integration, E2E)
 - Performance optimization
 - Security audit
