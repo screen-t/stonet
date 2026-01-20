@@ -55,7 +55,7 @@ const testimonials = [
     role: "Founder at StartupLab",
     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
     content:
-      "The quality of connections here is unmatched. It's like LinkedIn but actually useful for B2B.",
+      "The quality of connections here is unmatched. It's like LinkedIn but actually useful for professionals.",
   },
   {
     name: "Emily Rodriguez",
@@ -95,7 +95,7 @@ const Landing = () => {
             >
               <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
                 <Zap className="h-4 w-4" />
-                The future of B2B networking
+                The future of professional networking
               </span>
             </motion.div>
 
@@ -115,7 +115,7 @@ const Landing = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto"
             >
-              Join SM1 - the exclusive B2B network for professionals, entrepreneurs, 
+              Join stonet - the exclusive network for professionals, entrepreneurs, 
               innovators, and leaders. Share insights, discover opportunities, 
               and build meaningful business relationships.
             </motion.p>

@@ -39,11 +39,10 @@ const Login = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 mb-8">
             <div className="h-10 w-10 rounded-xl bg-gradient-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">SM1</span>
+              <span className="text-primary-foreground font-bold text-sm">stonet</span>
             </div>
             <div>
-              <span className="font-bold text-2xl">SM1</span>
-              <span className="text-muted-foreground ml-2">(B2B)</span>
+              <span className="font-bold text-2xl">stonet</span>
             </div>
           </Link>
 
@@ -256,7 +255,7 @@ const Login = () => {
             Secure & Professional
           </h2>
           <p className="text-primary-foreground/80 text-lg mb-6">
-            SM1 provides enterprise-grade security for your professional connections.
+            stonet provides enterprise-grade security for your professional connections.
           </p>
           <div className="space-y-3 text-left">
             <div className="flex items-center gap-3 text-primary-foreground/90">

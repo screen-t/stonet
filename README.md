@@ -1,6 +1,6 @@
-# SM1 (B2B) - Professional Networking Platform
+# Stonet - Professional Networking Platform
 
-A modern B2B professional networking platform built for entrepreneurs, innovators, and business leaders to connect, collaborate, and grow.
+A modern professional networking platform built for entrepreneurs, innovators, and business leaders to connect, collaborate, and grow.
 
 ## Tech Stack
 
@@ -24,7 +24,7 @@ A modern B2B professional networking platform built for entrepreneurs, innovator
 ## Project Structure
 
 ```
-b2b-network/
+stonet/
 ├── frontend/               # React frontend application
 │   ├── src/
 │   │   ├── components/    # Reusable UI components
@@ -94,7 +94,7 @@ b2b-network/
 1. **Clone the repository**
    ```bash
    git clone <your-repo-url>
-   cd b2b-network
+   cd stonet
    ```
 
 2. **Install frontend dependencies**

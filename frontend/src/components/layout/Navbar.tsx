@@ -42,10 +42,9 @@ export const Navbar = ({ isAuthenticated = false }: NavbarProps) => {
           {/* Logo */}
           <Link to={isAuthenticated ? "/feed" : "/"} className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">SM1</span>
+              <span className="text-primary-foreground font-bold text-sm">stonet</span>
             </div>
-            <span className="font-bold text-xl hidden sm:block">SM1</span>
-            <span className="text-xs text-muted-foreground hidden lg:block ml-1">(B2B)</span>
+            <span className="font-bold text-xl hidden sm:block">stonet</span>
           </Link>
 
           {/* Search Bar - Desktop */}

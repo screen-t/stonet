@@ -1,6 +1,6 @@
 # Backend API Requirements
 
-This document outlines the API endpoints required by the SM1 (B2B) frontend application.
+This document outlines the API endpoints required by the stonet frontend application.
 
 ## Base URL
 

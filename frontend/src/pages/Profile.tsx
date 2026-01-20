@@ -21,7 +21,7 @@ const profileData = {
   name: "John Doe",
   username: "johndoe",
   avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400",
-  headline: "Product Manager at Nexus | Building the future of B2B networking",
+  headline: "Product Manager at Nexus | Building the future of professional networking",
   bio: "Passionate about creating products that connect people and drive business growth. Previously at Google, Microsoft. Stanford MBA.",
   location: "San Francisco, CA",
   website: "johndoe.com",
@@ -32,7 +32,7 @@ const profileData = {
   skills: [
     "Product Management",
     "Strategy",
-    "B2B SaaS",
+    "Enterprise SaaS",
     "Go-to-Market",
     "User Research",
     "Data Analysis",
@@ -69,7 +69,7 @@ const userPosts: PostData[] = [
       headline: "Product Manager at Nexus",
     },
     content:
-      "Thrilled to join Nexus as a Product Manager! 🎉\n\nAfter 6 amazing years at Google and Microsoft, I'm ready for a new adventure. Excited to help build the future of B2B professional networking.\n\nIf you're in the Bay Area, let's grab coffee!",
+      "Thrilled to join Nexus as a Product Manager! 🎉\n\nAfter 6 amazing years at Google and Microsoft, I'm ready for a new adventure. Excited to help build the future of professional networking.\n\nIf you're in the Bay Area, let's grab coffee!",
     likes: 156,
     comments: 28,
     shares: 12,

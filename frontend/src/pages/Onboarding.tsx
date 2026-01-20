@@ -58,12 +58,11 @@ const Onboarding = () => {
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 mb-4">
               <div className="h-10 w-10 rounded-lg bg-gradient-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">SM1</span>
+                <span className="text-primary-foreground font-bold text-sm">stonet</span>
               </div>
-              <span className="font-bold text-2xl">SM1</span>
-              <span className="text-muted-foreground">(B2B)</span>
+              <span className="font-bold text-2xl">stonet</span>
             </div>
-            <h1 className="text-3xl font-bold mb-2">Welcome to SM1</h1>
+            <h1 className="text-3xl font-bold mb-2">Welcome to stonet</h1>
             <p className="text-muted-foreground">
               Let's set up your professional profile
             </p>

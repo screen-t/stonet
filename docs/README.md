@@ -1,8 +1,89 @@
-# SM1 (B2B) Documentation
+# stonet Documentation
 
-This directory contains comprehensive documentation for backend and database teams working on the SM1 (B2B) professional networking platform.
+This directory contains comprehensive documentation for all teams working on the stonet professional networking platform.
 
 ## Documentation Files
+
+### Project Management
+
+**[PROJECT_PLAN.md](./PROJECT_PLAN.md)**
+- Master project plan and objectives
+- Project scope and deliverables
+- High-level timeline and phases
+- Risk management and mitigation
+- Success criteria and metrics
+- Budget and resource allocation
+
+**[TEAM_STRUCTURE.md](./TEAM_STRUCTURE.md)**
+- Organization chart and hierarchy
+- Roles and responsibilities
+- Team member assignments
+- Reporting structure
+- Working agreements and policies
+- Onboarding procedures
+
+**[WORKFLOW.md](./WORKFLOW.md)**
+- Git branching strategy
+- Code review process
+- Pull request guidelines
+- Commit message standards
+- CI/CD pipeline
+- Development best practices
+
+**[TIMELINE.md](./TIMELINE.md)**
+- Detailed project schedule (day-by-day)
+- Sprint breakdown
+- Milestone dates
+- Dependencies and critical path
+- Buffer time allocation
+
+**[TASK_ASSIGNMENTS.md](./TASK_ASSIGNMENTS.md)**
+- Detailed task breakdown by sprint
+- Task assignments to team members
+- Effort estimates and deadlines
+- Task dependencies and priorities
+- Task status tracking
+
+**[COMMUNICATION_PLAN.md](./COMMUNICATION_PLAN.md)**
+- Communication channels and tools
+- Meeting schedule and structure
+- Reporting requirements and formats
+- Escalation procedures
+- Status update templates
+
+**[TESTING_STRATEGY.md](./TESTING_STRATEGY.md)**
+- Testing types and coverage targets
+- Unit, integration, E2E testing
+- Performance and security testing
+- Test tools and frameworks
+- Quality gates and release criteria
+- Bug tracking and management
+
+**[TOOLS.md](./TOOLS.md)**
+- Complete technology stack
+- Development tools and IDEs
+- Project management tools
+- Communication platforms
+- Tool access and permissions
+- Budget and cost breakdown
+
+**[SECURITY_AUDIT.md](./SECURITY_AUDIT.md)**
+- Security architecture and strategy
+- Authentication and authorization
+- Input validation and sanitization
+- Data protection and encryption
+- Security monitoring and incident response
+- Compliance (GDPR, CCPA)
+
+**[RELEASE_PLAN.md](./RELEASE_PLAN.md)**
+- Versioning strategy (SemVer)
+- Release schedule and calendar
+- Release process and procedures
+- Rollback and hotfix procedures
+- Future roadmap
+- Deprecation policy
+
+### Technical Documentation
 
 ### For Database Team
 
@@ -33,7 +114,7 @@ This directory contains comprehensive documentation for backend and database tea
 - Testing procedures
 - Common issues and solutions
 
-### For Both Teams
+### For Frontend Team
 
 **[FRONTEND_DATA_MODELS.md](./FRONTEND_DATA_MODELS.md)**
 - TypeScript interfaces for all data models
@@ -243,7 +324,7 @@ DATABASE_URL=postgresql://...
 SUPABASE_URL=https://....supabase.co
 SUPABASE_SERVICE_KEY=...
 JWT_SECRET=...
-STORAGE_BUCKET=sm1-files
+STORAGE_BUCKET=stonet-files
 
 # Frontend
 VITE_SUPABASE_URL=https://....supabase.co
@@ -280,4 +361,4 @@ supabase migration new migration_name
 
 ## License
 
-Proprietary - SM1 (B2B) Platform
+Proprietary - stonet Platform

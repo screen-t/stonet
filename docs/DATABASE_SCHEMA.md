@@ -1,6 +1,6 @@
 # Database Schema Requirements
 
-This document outlines the database schema required to support the SM1 (B2B) frontend application.
+This document outlines the database schema required to support the stonet frontend application.
 
 ## Overview
 

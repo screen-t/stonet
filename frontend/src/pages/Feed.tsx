@@ -38,8 +38,8 @@ const samplePosts: PostData[] = [
       headline: "Founder at StartupLab | Angel Investor",
     },
     content:
-      "Hot take: The best B2B products don't feel like B2B products.\n\nThey feel like consumer apps that happen to solve business problems.\n\nSimplicity wins. Every time.\n\nWhat's your take?",
-    tags: ["#ProductManagement", "#B2B", "#Startups"],
+      "Hot take: The best products don't feel like enterprise products.\n\nThey feel like consumer apps that happen to solve business problems.\n\nSimplicity wins. Every time.\n\nWhat's your take?",
+    tags: ["#ProductManagement", "#Enterprise", "#Startups"],
     likes: 512,
     comments: 89,
     shares: 34,
@@ -106,7 +106,7 @@ const Feed = () => {
         username: "johndoe",
         avatar:
           "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100",
-        headline: "Product Manager at SM1",
+        headline: "Product Manager at stonet",
       },
       content: data.content,
       image: data.image,

@@ -357,7 +357,7 @@ const SecuritySettings = () => {
               <CardHeader>
                 <CardTitle>Connected Accounts</CardTitle>
                 <CardDescription>
-                  Manage how you can sign in to your SM1 account
+                  Manage how you can sign in to your stonet account
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">

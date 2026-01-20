@@ -1,8 +1,8 @@
-# SM1 (B2B) Frontend
+# Stonet Frontend
 
 ## Project info
 
-This is the frontend application for the SM1 (B2B) professional networking platform.
+This is the frontend application for the Stonet professional networking platform.
 
 ## How can I edit this code?
 

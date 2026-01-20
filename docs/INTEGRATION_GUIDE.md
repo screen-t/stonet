@@ -1,6 +1,6 @@
 # Backend Integration Guide
 
-This guide helps backend developers integrate their API with the SM1 (B2B) frontend application.
+This guide helps backend developers integrate their API with the stonet frontend application.
 
 ## Quick Start
 
