@@ -10,6 +10,15 @@ build/
 .next/
 out/
 
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
 # Environment variables
 .env
 .env.local
@@ -17,35 +26,23 @@ out/
 .env.test.local
 .env.production.local
 .env*.local
-.env.staging
 
 # Supabase
 .supabase/
 supabase/.branches/
 supabase/.temp/
 
-# Logs
-logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-debug.log
-
 # Testing
 coverage/
 *.lcov
 .nyc_output
-.nyc_output/
 
 # IDE and Editor files
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
 .idea/
+.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
@@ -56,7 +53,6 @@ coverage/
 *~
 
 # OS files
-.DS_Store
 Thumbs.db
 Desktop.ini
 
@@ -65,14 +61,17 @@ Desktop.ini
 *.temp
 .cache/
 .parcel-cache/
-*.local
-.local
-
-# Local development
-.vercel
 
 # Lock files (optional - uncomment if you want to ignore)
 # package-lock.json
 # yarn.lock
 # pnpm-lock.yaml
 bun.lockb
+
+# Debug
+debug.log
+
+# Local development
+.local
+*.local
+.vercel
