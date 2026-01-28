@@ -17,7 +17,7 @@ Set up GitHub Actions CI/CD pipeline for automated testing, building, and deploy
 
 - GitHub repository access (admin)
 - Vercel account for frontend deployment
-- Supabase projects created (dev/staging)
+- Supabase staging project created (BE-001)
 - Basic understanding of GitHub Actions
 
 ## Instructions
@@ -77,8 +77,8 @@ jobs:
         working-directory: ./frontend
         run: npm run build
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL_DEV }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY_DEV }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL_STAGING }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY_STAGING }}
       
       - name: Run tests (when available)
         working-directory: ./frontend
@@ -220,11 +220,6 @@ Add the following secrets to your GitHub repository:
 **Settings → Secrets and variables → Actions**
 
 #### Required Secrets:
-
-**Supabase (Development):**
-- `VITE_SUPABASE_URL_DEV`
-- `VITE_SUPABASE_ANON_KEY_DEV`
-- `DEV_DATABASE_URL`
 
 **Supabase (Staging):**
 - `VITE_SUPABASE_URL_STAGING`

@@ -5,7 +5,7 @@
 **Estimate:** 16 hours  
 **Deadline:** Jan 28, 2026  
 **Status:** Not Started  
-**Dependencies:** FE-001 (Dev Environment Setup), BE-001 (Supabase Setup)  
+**Dependencies:** FE-001 (Local Environment Setup), BE-001 (Supabase Setup)  
 **Created:** Jan 23, 2026
 
 ---
@@ -16,8 +16,8 @@ Build complete authentication UI including login page, signup page, and password
 
 ## Prerequisites
 
-- Frontend development environment set up
-- Supabase client configured
+- Frontend local development environment set up
+- Supabase client configured (local or staging)
 - shadcn/ui components available
 - Access to design mockups (if available)
 
