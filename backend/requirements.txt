@@ -2,3 +2,6 @@ fastapi
 uvicorn
 supabase
 python-dotenv
+pydantic[email]
+pytest
+pytest-mock
