@@ -1,0 +1,38 @@
+name: Code Quality
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  lint-and-format:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+      
+      - name: Run ESLint
+        working-directory: ./frontend
+        run: npm run lint
+        continue-on-error: true  # So it doesn't block early if lint has issues
+      
+      - name: Check formatting with Prettier
+        working-directory: ./frontend
+        run: npx prettier --check "src/**/*.{ts,tsx,js,jsx,css,md}" || echo "Prettier issues found - fix soon!"
+        continue-on-error: true
