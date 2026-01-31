@@ -3,8 +3,19 @@ from datetime import datetime
 
 def check_username_availability(username: str) -> bool:
     """Check if username is available"""
-    result = supabase.table("users").select("id").eq("username", username.lower()).execute()
-    return len(result.data) == 0
+    try:
+        result = supabase.table("users").select("id").eq("username", username.lower()).execute()
+        
+        # Check if we have data attribute
+        if hasattr(result, 'data') and result.data is not None:
+            is_available = len(result.data) == 0
+            return is_available
+        else:
+            return False
+            
+    except Exception as e:
+        # Log error for debugging purposes
+        return False
 
 def track_login_activity(user_id: str, session_id: str, ip_address: str, user_agent: str, status: str = "success"):
     """Track user login activity"""

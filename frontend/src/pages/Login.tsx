@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Phone, Shield } from "lucide-react";
+import { useAuth } from "@/lib/auth";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -20,11 +21,52 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [loginMethod, setLoginMethod] = useState("email");
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { login } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation() as any
+  const from = location?.state?.from?.pathname || '/feed'
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login - navigate to feed
-    window.location.href = "/feed";
+    try {
+      setError('')
+      setLoading(true)
+      // use login from context
+      await login(email, password)
+      // navigate back to original path or /feed
+      navigate(from, { replace: true })
+    } catch (err: any) {
+      console.error("Login error:", err)
+      
+      // Handle specific error messages from backend
+      let errorMessage = 'Login failed. Please try again.'
+      
+      if (err.message) {
+        const msg = err.message.toLowerCase()
+        
+        if (msg.includes('invalid email or password')) {
+          errorMessage = 'Invalid email or password. Please check your credentials and try again.'
+        } else if (msg.includes('email not confirmed')) {
+          errorMessage = 'Please check your email and click the confirmation link before logging in.'
+        } else if (msg.includes('too many')) {
+          errorMessage = 'Too many login attempts. Please wait a few minutes and try again.'
+        } else if (msg.includes('failed to fetch') || msg.includes('network')) {
+          errorMessage = 'Connection failed. Please check your internet connection and try again.'
+        } else if (msg.includes('cors')) {
+          errorMessage = 'Connection error. Please refresh the page and try again.'
+        } else {
+          // Use the original error message if it's user-friendly
+          errorMessage = err.message
+        }
+      }
+      
+      setError(errorMessage)
+    } finally {
+      setLoading(false)
+    }
   };
 
   return (
@@ -111,7 +153,16 @@ const Login = () => {
             </TabsList>
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              <TabsContent value="email" className="space-y-4 mt-0">
+            {error ? (
+              <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">
+                <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <span>{error}</span>
+              </div>
+            ) : null}
+
+            <TabsContent value="email" className="space-y-4 mt-0">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email Address</Label>
                   <Input
@@ -214,8 +265,8 @@ const Login = () => {
               </Label>
             </div>
 
-            <Button type="submit" className="w-full gap-2" size="lg">
-              Sign In
+            <Button type="submit" className="w-full gap-2" size="lg" disabled={loading}>
+              {loading ? 'Signing in...' : 'Sign In'}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </form>

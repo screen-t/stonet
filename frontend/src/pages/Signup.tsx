@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Check } from "lucide-react";
+import { useAuth } from "@/lib/auth";
 
 const benefits = [
   "Connect with 50,000+ professionals",
@@ -21,13 +22,72 @@ const Signup = () => {
     fullName: "",
     email: "",
     password: "",
+    username: ""
   });
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const { signup } = useAuth()
   const [agreeTerms, setAgreeTerms] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Navigate to onboarding
-    window.location.href = "/onboarding";
+
+    const [firstName, lastName] = formData.fullName.trim().split(/\s+/, 2)
+
+    // Validation
+    if (!formData.fullName.trim()) {
+      setError('Full name is required')
+      return
+    }
+    if (!formData.email.trim()) {
+      setError('Email is required')
+      return
+    }
+    if (!formData.username.trim()) {
+      setError('Username is required')
+      return
+    }
+    if (formData.username.length < 3) {
+      setError('Username must be at least 3 characters')
+      return
+    }
+
+    // Basic client-side validation to avoid 422 from server
+    const pw = formData.password || ''
+    if (pw.length < 8 || !/[A-Z]/.test(pw) || !/[0-9]/.test(pw)) {
+      setError('Password must be at least 8 characters and include an uppercase letter and a number')
+      return
+    }
+
+    try {
+      setError('')
+      setLoading(true)
+
+      // Check username availability
+      const check = await (await import('../lib/api')).authApi.checkUsername(formData.username || '')
+      if (!check.available) {
+        setError('Username is already taken')
+        setLoading(false)
+        return
+      }
+
+      // use signup from context
+      await signup({
+        email: formData.email,
+        password: formData.password,
+        username: formData.username,
+        first_name: firstName || '',
+        last_name: lastName || firstName || 'User', // fallback if no last name
+      })
+
+      window.location.href = '/onboarding'
+    } catch (err: any) {
+      // API returns formatted string when possible
+      setError(err?.message || JSON.stringify(err) || 'Signup failed')
+    } finally {
+      setLoading(false)
+    }
   };
 
   const passwordStrength = () => {
@@ -101,6 +161,8 @@ const Signup = () => {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {error ? <p className="text-sm text-red-600">{error}</p> : null}
+
             <div className="space-y-2">
               <Label htmlFor="fullName">Full Name</Label>
               <div className="relative">
@@ -130,6 +192,24 @@ const Signup = () => {
                   value={formData.email}
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
+                  }
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="your-username"
+                  value={formData.username}
+                  onChange={(e) =>
+                    setFormData({ ...formData, username: e.target.value })
                   }
                   className="pl-10"
                   required
@@ -208,9 +288,9 @@ const Signup = () => {
               type="submit"
               className="w-full"
               size="lg"
-              disabled={!agreeTerms}
+              disabled={!agreeTerms || loading}
             >
-              Create Account
+              {loading ? 'Creating...' : 'Create Account'}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </form>

@@ -20,29 +20,71 @@ def signup(payload: SignupRequest, request: Request):
         )
 
     # Create auth user
-    auth_res = supabase.auth.sign_up({
-        "email": payload.email,
-        "password": payload.password
-    })
+    try:
+        auth_res = supabase.auth.sign_up({
+            "email": payload.email,
+            "password": payload.password
+        })
+        # Try to show common attributes
+        try:
+            print(f"-> user: {auth_res.user}")
+            print(f"-> error: {getattr(auth_res, 'error', None)}")
+            print(f"-> session: {auth_res.session}")
+        except Exception:
+            pass
+        # Also write debug info to file for easier inspection
+        try:
+            import json
+            debug = {
+                'user': str(getattr(auth_res, 'user', None)),
+                'error': str(getattr(auth_res, 'error', None)),
+                'session': str(getattr(auth_res, 'session', None))
+            }
+            with open('signup_debug.log', 'a') as f:
+                f.write(json.dumps(debug) + "\n")
+        except Exception as e:
+            print(f"❌ Failed to write signup debug log: {e}")
+    except Exception as e:
+        print(f"❌ Supabase sign_up exception: {e}")
+        # Write exception to log for inspection
+        try:
+            with open('signup_exception.log', 'a') as f:
+                f.write(str(e) + "\n")
+        except Exception as log_e:
+            print(f"❌ Failed to write signup_exception.log: {log_e}")
+        raise HTTPException(status_code=500, detail=f"Signup failed: {str(e)}")
 
-    
     if auth_res.user is None:
+        # If Supabase returned a known error payload, include it
+        err_msg = getattr(auth_res, 'error', None) or "User with this email already exists"
+        print(f"⚠️ sign_up response has no user, error: {err_msg}")
         raise HTTPException(
             status_code=409,
-            detail="User with this email already exists"
+            detail=str(err_msg)
         )
 
     user_id = auth_res.user.id
 
     # Create user profile
-    supabase.table("users").insert({
-        "id": user_id,
-        "email": payload.email,
-        "username": payload.username,
-        "first_name": payload.first_name,
-        "last_name": payload.last_name,
-        "is_verified": False
-    }).execute()
+    try:
+        profile_result = supabase.table("users").insert({
+            "id": user_id,
+            "email": payload.email,
+            "username": payload.username,
+            "first_name": payload.first_name,
+            "last_name": payload.last_name,
+            "is_verified": False
+        }).execute()
+        pass  # User profile created successfully
+    except Exception as e:
+        # Log profile creation failure
+        pass
+        # If profile creation fails, we should ideally clean up the auth user
+        # For now, let's at least log the error and continue
+        raise HTTPException(
+            status_code=500,
+            detail=f"User account created but profile setup failed: {str(e)}"
+        )
     
     # Track login activity
     client_ip = request.client.host if request.client else "unknown"
@@ -66,13 +108,41 @@ def signup(payload: SignupRequest, request: Request):
 # Login Api
 @router.post("/login")
 def login(payload: LoginRequest, request: Request):
-    auth_res = supabase.auth.sign_in_with_password({
-        "email": payload.email,
-        "password": payload.password
-    })
-    
-    if not auth_res.user:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+    try:
+        auth_res = supabase.auth.sign_in_with_password({
+            "email": payload.email,
+            "password": payload.password
+        })
+        
+        if not auth_res.user:
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+            
+    except Exception as e:
+        print(f"Login error details: {e}")
+        
+        # Parse Supabase auth errors for better UX
+        error_msg = str(e).lower()
+        if "invalid login credentials" in error_msg:
+            raise HTTPException(
+                status_code=401, 
+                detail="Invalid email or password. Please check your credentials and try again."
+            )
+        elif "email not confirmed" in error_msg:
+            raise HTTPException(
+                status_code=401,
+                detail="Please check your email and click the confirmation link before logging in."
+            )
+        elif "too many requests" in error_msg:
+            raise HTTPException(
+                status_code=429,
+                detail="Too many login attempts. Please wait a few minutes and try again."
+            )
+        else:
+            # Generic fallback for unexpected errors
+            raise HTTPException(
+                status_code=500,
+                detail="Login failed. Please try again or contact support if the problem persists."
+            )
     
     # Update last active timestamp
     supabase.table("users").update({
@@ -157,3 +227,27 @@ def me(user=Depends(require_auth)):
         "id": user.id,
         "email": user.email
     }
+
+# Check username availability
+@router.get("/check-username")
+def check_username(username: str):
+    print(f"🔍 /auth/check-username called with username: '{username}'")
+    
+    if not username:
+        print("❌ No username provided")
+        raise HTTPException(status_code=400, detail="username query parameter required")
+    
+    if not username.strip():
+        print("❌ Empty username provided")
+        raise HTTPException(status_code=400, detail="username cannot be empty")
+        
+    try:
+        print(f"📋 Calling check_username_availability for: '{username}'")
+        available = check_username_availability(username)
+        print(f"✅ Username availability result: {available}")
+        return {"available": available}
+    except Exception as e:
+        print(f"❌ Unexpected error in /auth/check-username: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
