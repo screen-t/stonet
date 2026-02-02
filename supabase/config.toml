@@ -2,7 +2,7 @@
 # https://supabase.com/docs/guides/local-development/cli/config
 # A string used to distinguish different Supabase projects on the same host. Defaults to the
 # working directory name when running `supabase init`.
-project_id = "backend"
+project_id = "stonet"
 
 [api]
 enabled = true
@@ -26,9 +26,11 @@ enabled = false
 
 [db]
 # Port to use for the local database URL.
-port = 54322
+port = 55432
 # Port used by db diff command to initialize the shadow database.
 shadow_port = 54320
+# Maximum amount of time to wait for health check when starting the local database.
+health_timeout = "2m"
 # The database major version to use. This has to be the same as your remote database's. Run `SHOW
 # server_version;` on the remote database to check.
 major_version = 17
@@ -73,7 +75,7 @@ allowed_cidrs = ["0.0.0.0/0"]
 allowed_cidrs_v6 = ["::/0"]
 
 [realtime]
-enabled = true
+enabled = false
 # Bind realtime via either IPv4 or IPv6. (default: IPv4)
 # ip_version = "IPv6"
 # The maximum length in bytes of HTTP request headers. (default: 4096)
@@ -101,7 +103,7 @@ port = 54324
 # sender_name = "Admin"
 
 [storage]
-enabled = true
+enabled = false
 # The maximum file size allowed (e.g. "5MB", "500KB").
 file_size_limit = "50MiB"
 
@@ -143,11 +145,16 @@ max_indexes = 5
 
 [auth]
 enabled = true
+site_url = "http://localhost:8080"
+additional_redirect_urls = [
+  "http://localhost:8080",
+  "http://127.0.0.1:8080"
+]
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "http://127.0.0.1:3000"
+
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to the local API URL (http://127.0.0.1:<port>/auth/v1).
@@ -362,9 +369,9 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+
 [analytics]
-enabled = true
-port = 54327
+enabled = false
 # Configure one of the supported backends: `postgres`, `bigquery`.
 backend = "postgres"
 
@@ -380,3 +387,12 @@ s3_region = "env(S3_REGION)"
 s3_access_key = "env(S3_ACCESS_KEY)"
 # Configures AWS_SECRET_ACCESS_KEY for S3 bucket
 s3_secret_key = "env(S3_SECRET_KEY)"
+[auth.external.github]
+enabled = true
+client_id = "Ov23lia0KCFFRi9isgCG"
+secret = "env(GITHUB_CLIENT_SECRET)"
+
+[auth.external.google]
+enabled = true
+client_id = "12900166152-ljf2jm4t1ie5ihf4oni2tfaeou5s6tpd.apps.googleusercontent.com"
+secret = "env(GOOGLE_CLIENT_SECRET)"

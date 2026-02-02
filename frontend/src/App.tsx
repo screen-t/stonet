@@ -14,6 +14,7 @@ import Messages from "./pages/Messages";
 import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import OAuthCallback from "./pages/OAuthCallBack";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<NotFound />} />
+          <Route path="/auth/callback" element={<OAuthCallback />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
