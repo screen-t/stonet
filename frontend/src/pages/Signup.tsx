@@ -102,6 +102,8 @@ const Signup = () => {
 
   const strengthColors = ["bg-border", "bg-destructive", "bg-orange-500", "bg-yellow-500", "bg-accent"];
   const strengthLabels = ["", "Weak", "Fair", "Good", "Strong"];
+  console.log("SUPABASE URL:", import.meta.env.VITE_SUPABASE_URL)
+
 
   return (
     <div className="min-h-screen flex">

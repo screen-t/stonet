@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes.auth import router as auth_router
+from app.routes.oauth import router as oauth_router
 
 # FastAPI application
 app = FastAPI(title="Stonet Backend API")
@@ -34,4 +35,5 @@ def health():
 
 # Include authentication routes
 app.include_router(auth_router)
+app.include_router(oauth_router)
 

@@ -17,6 +17,7 @@ import Messages from "./pages/Messages";
 import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import OAuthCallback from "./pages/OAuthCallBack";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,20 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/feed" element={<Feed />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/network" element={<Network />} />
+          <Route path="/messages" element={<Messages />} />
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="*" element={<NotFound />} />
+          <Route path="/auth/callback" element={<OAuthCallback />} />
+        </Routes>
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Landing />} />
