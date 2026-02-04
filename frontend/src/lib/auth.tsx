@@ -117,7 +117,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!tokens.refresh_token) throw new Error('No refresh token')
     const res = await authApi.refresh({ refresh_token: tokens.refresh_token })
     if (res.session) setStoredTokens(res.session)
-    return res.session
   }
 
   return (

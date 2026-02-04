@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { useAuth } from "@/lib/auth";
 import {
   User,
   Bell,
@@ -21,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const Settings = () => {
   const { toast } = useToast();
+  const { logout } = useAuth();
   const [profile, setProfile] = useState({
     firstName: "John",
     lastName: "Doe",
@@ -51,7 +53,21 @@ const Settings = () => {
       description: "Your profile has been saved successfully.",
     });
   };
-
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: "Signed Out",
+        description: "You have been signed out successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -367,7 +383,11 @@ const Settings = () => {
 
               <div>
                 <h3 className="font-semibold mb-4">Session</h3>
-                <Button variant="outline" className="gap-2 text-destructive hover:text-destructive">
+                <Button 
+                  variant="outline" 
+                  className="gap-2 text-destructive hover:text-destructive"
+                  onClick={handleLogout}
+                >
                   <LogOut className="h-4 w-4" />
                   Sign Out
                 </Button>
