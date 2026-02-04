@@ -22,13 +22,17 @@ Set up GitHub Actions CI/CD pipeline for automated testing, building, and deploy
 
 ## Instructions
 
+### Phase 1: Development CI (Start Here - No Deployment Needed)
+
+For teams still in development, start with just CI (testing) without deployment.
+
 ### Step 1: Create GitHub Actions Workflow Directory
 
 ```bash
 mkdir -p .github/workflows
 ```
 
-### Step 2: Frontend CI Workflow
+### Step 2: Frontend CI Workflow (Development Phase)
 
 **File:** `.github/workflows/frontend-ci.yml`
 
@@ -48,6 +52,204 @@ on:
 
 jobs:
   test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+      
+      - name: Run linter
+        working-directory: ./frontend
+        run: npm run lint
+      
+      - name: Run type check
+        working-directory: ./frontend
+        run: npx tsc --noEmit
+      
+      - name: Build (development)
+        working-directory: ./frontend
+        run: npm run build
+        env:
+          # Use placeholder values for development builds
+          VITE_BACKEND_URL: "http://localhost:8002"
+      
+      - name: Run tests (when available)
+        working-directory: ./frontend
+        run: npm test || echo "No tests yet - add them soon!"
+        continue-on-error: true
+```
+
+### Step 2B: Backend CI Workflow (Development Phase)
+
+**File:** `.github/workflows/backend-ci.yml`
+
+```yaml
+name: Backend CI
+
+on:
+  pull_request:
+    paths:
+      - 'backend/**'
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'backend/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        working-directory: ./backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Run tests
+        working-directory: ./backend
+        run: |
+          python -m pytest tests/ -v || echo "Add more tests soon!"
+        continue-on-error: true
+      
+      - name: Type check (if using mypy)
+        working-directory: ./backend
+        run: |
+          pip install mypy
+          python -m mypy app/ || echo "Type checking optional for now"
+        continue-on-error: true
+```
+
+### Step 3: Backend Deployment Workflow (Render)
+
+**File:** `.github/workflows/backend-deploy.yml`
+
+```yaml
+name: Deploy Backend
+
+on:
+  push:
+    branches:
+      - develop  # Deploy to staging
+      - main     # Deploy to production
+    paths:
+      - 'backend/**'
+
+jobs:
+  deploy-staging:
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy to Render (Staging)
+        uses: bountyhill/render-action@0.6.0
+        with:
+          render-token: ${{ secrets.RENDER_API_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          service-id: ${{ secrets.RENDER_SERVICE_ID_STAGING }}
+          retries: 20
+          wait: 16000
+          sleep: 30000
+
+  deploy-production:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    needs: []  # Add frontend tests as dependency when ready
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy to Render (Production)
+        uses: bountyhill/render-action@0.6.0
+        with:
+          render-token: ${{ secrets.RENDER_API_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          service-id: ${{ secrets.RENDER_SERVICE_ID_PRODUCTION }}
+          retries: 20
+          wait: 16000
+          sleep: 30000
+```
+
+### Step 4: Frontend Deployment Workflow (Vercel)
+
+**File:** `.github/workflows/frontend-deploy.yml`
+
+```yaml
+name: Deploy Frontend
+
+on:
+  push:
+    branches:
+      - develop  # Deploy to staging
+      - main     # Deploy to production  
+    paths:
+      - 'frontend/**'
+
+jobs:
+  deploy-staging:
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy to Vercel (Staging)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_STAGING }}
+          working-directory: ./frontend
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+
+  deploy-production:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    needs: []  # Add tests as dependency
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy to Vercel (Production)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_PRODUCTION }}
+          working-directory: ./frontend
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+```
     runs-on: ubuntu-latest
     
     steps:
@@ -213,7 +415,7 @@ jobs:
         continue-on-error: true
 ```
 
-### Step 6: Configure GitHub Secrets
+### Step 5: Configure GitHub Secrets
 
 Add the following secrets to your GitHub repository:
 
@@ -231,11 +433,16 @@ Add the following secrets to your GitHub repository:
 - `VITE_SUPABASE_ANON_KEY_PROD`
 - `PRODUCTION_DATABASE_URL`
 
-**Vercel:**
+**Vercel (Frontend):**
 - `VERCEL_TOKEN` (from Vercel account settings)
 - `VERCEL_ORG_ID` (from Vercel project settings)
-- `VERCEL_PROJECT_ID` (staging project)
-- `VERCEL_PROJECT_ID_PROD` (production project)
+- `VERCEL_PROJECT_ID_STAGING` (staging project)
+- `VERCEL_PROJECT_ID_PRODUCTION` (production project)
+
+**Render (Backend):**
+- `RENDER_API_TOKEN` (from Render account settings)
+- `RENDER_SERVICE_ID_STAGING` (staging service ID)
+- `RENDER_SERVICE_ID_PRODUCTION` (production service ID)
 
 ### Step 7: Configure Branch Protection
 
@@ -252,27 +459,58 @@ For `develop` branch:
 - ✅ Require status checks to pass before merging
 - ✅ Require branches to be up to date before merging
 
-### Step 8: Setup Vercel Projects
+### Step 6: Setup Render Projects (Backend)
+
+1. **Create Render Account** (if not exists)
+   - Go to https://render.com
+   - Sign up with GitHub
+
+2. **Create Staging Backend Service:**
+   - Click "New +" → "Web Service"
+   - Connect GitHub repository: `b2b-network`
+   - Name: `b2b-network-backend-staging`
+   - Branch: `develop`
+   - Root Directory: `backend`
+   - Build Command: `pip install -r requirements.txt`
+   - Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+   - Environment Variables:
+     - `SUPABASE_URL` (staging)
+     - `SUPABASE_SERVICE_ROLE_KEY` (staging)
+     - `JWT_SECRET_KEY`
+   
+3. **Create Production Backend Service:**
+   - Repeat for production
+   - Name: `b2b-network-backend-production`
+   - Branch: `main`
+   - Environment Variables: (production keys)
+
+4. **Get Service IDs:**
+   - Go to each service settings
+   - Copy Service ID for GitHub secrets
+
+### Step 7: Setup Vercel Projects (Frontend)
 
 1. **Create Vercel Account** (if not exists)
    - Go to https://vercel.com
    - Sign up with GitHub
 
-2. **Import Frontend Project:**
+2. **Create Staging Frontend Project:**
    - Click "Add New Project"
-   - Import from GitHub: `b2b-network/frontend`
+   - Import from GitHub: `b2b-network`
+   - Project name: `b2b-network-frontend-staging`
    - Framework Preset: Vite
    - Root Directory: `frontend`
+   - Branch: `develop`
    - Environment Variables:
-     - `VITE_SUPABASE_URL`
-     - `VITE_SUPABASE_ANON_KEY`
+     - `VITE_SUPABASE_URL` (staging)
+     - `VITE_SUPABASE_ANON_KEY` (staging)
+     - `VITE_BACKEND_URL` (staging Render URL)
    
-3. **Create Staging Environment:**
-   - Settings → Domains → Add staging domain
-   - Settings → Environment Variables → Add staging vars
-
-4. **Create Production Environment:**
-   - Repeat for production with production Supabase keys
+3. **Create Production Frontend Project:**
+   - Repeat for production
+   - Project name: `b2b-network-frontend-production`  
+   - Branch: `main`
+   - Environment Variables: (production keys)
 
 ### Step 9: Create README for CI/CD
 
@@ -335,10 +573,25 @@ Document:
 ## Environment Strategy
 
 ```
-main branch → Production (manual approval)
-develop branch → Staging (auto deploy)
+develop branch → Staging/Development Environment
+main branch → Production Environment (when ready)
 feature/* → CI only (no deploy)
 ```
+
+### Account Setup (Single Accounts, Multiple Projects):
+
+**Vercel (One Account):**
+- Project 1: `b2b-network-staging` (connected to `develop` branch)
+- Project 2: `b2b-network-production` (connected to `main` branch) - *Create when ready*
+
+**Supabase (One Account):**  
+- Project 1: `b2b-network-dev` (for staging/development)
+- Project 2: `b2b-network-prod` (for production) - *Create when ready*
+
+**GitHub (One Repository):**
+- Branch: `develop` → Auto-deploy to staging
+- Branch: `main` → Auto-deploy to production (with approval)
+- Feature branches: CI only
 
 ## Monitoring After Setup
 
