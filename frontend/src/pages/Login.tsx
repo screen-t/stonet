@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Link } from "react-router-dom";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -74,7 +73,7 @@ const Login = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = async (): Promise<void> => {
   await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
@@ -83,7 +82,7 @@ const Login = () => {
   });
 };
 
-const handleGithubLogin = async () => {
+const handleGithubLogin = async (): Promise<void> => {
   await supabase.auth.signInWithOAuth({
     provider: "github",
     options: {
@@ -92,7 +91,7 @@ const handleGithubLogin = async () => {
   });
 };
 
-const handleLinkedinLogin = async () => {
+const handleLinkedinLogin = async (): Promise<void> => {
   await supabase.auth.signInWithOAuth({
     provider: "linkedin_oidc",
     options: {
