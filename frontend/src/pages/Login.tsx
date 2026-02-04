@@ -74,7 +74,7 @@ const Login = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = async (): Promise<void> => {
   await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
@@ -83,7 +83,7 @@ const Login = () => {
   });
 };
 
-const handleGithubLogin = async () => {
+const handleGithubLogin = async (): Promise<void> => {
   await supabase.auth.signInWithOAuth({
     provider: "github",
     options: {
@@ -92,7 +92,7 @@ const handleGithubLogin = async () => {
   });
 };
 
-const handleLinkedinLogin = async () => {
+const handleLinkedinLogin = async (): Promise<void> => {
   await supabase.auth.signInWithOAuth({
     provider: "linkedin_oidc",
     options: {
