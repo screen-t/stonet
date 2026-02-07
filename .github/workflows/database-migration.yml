@@ -1,0 +1,33 @@
+name: Database Migrations
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'supabase/migrations/**'
+  workflow_dispatch:  
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    environment: production  
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Run migrations
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          supabase login --token "${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" || echo "Login skipped - using direct db push"
+          supabase db push --db-url "$SUPABASE_DB_URL"
+        working-directory: ./supabase
+        continue-on-error: true 
