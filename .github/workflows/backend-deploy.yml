@@ -1,0 +1,35 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production  
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Render (Production)
+        if: success()
+        uses: bountyhill/render-action@0.6.0
+        with:
+          render-token: ${{ secrets.RENDER_API_TOKEN }}                  # Add this secret when Render is set up
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          service-id: ${{ secrets.RENDER_SERVICE_ID_PRODUCTION }}       # Add when you have the service ID
+          retries: 20
+          wait: 16000
+          sleep: 30000
+        continue-on-error: true  # Won't fail CI if Render not configured yet
+
+      - name: Set Backend Environment Variables (example)
+        run: echo "Backend secrets available for Render:"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
