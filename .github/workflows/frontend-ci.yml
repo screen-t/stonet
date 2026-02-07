@@ -37,12 +37,12 @@ jobs:
         working-directory: ./frontend
         run: npx tsc --noEmit
       
-      - name: Build (development)
+      - name: Build
         working-directory: ./frontend
         run: npm run build
         env:
-          # Placeholder for local/dev – we'll override with real secrets later
-          VITE_BACKEND_URL: "http://localhost:8002"
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
       
       - name: Run tests (when available)
         working-directory: ./frontend
