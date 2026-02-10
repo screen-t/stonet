@@ -1,11 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useNavigate, Navigate, useLocation } from 'react-router-dom'
 import { authApi } from './api'
-
-type User = {
-  id: string
-  email: string
-}
+import { User } from '@/types/api'
 
 type Session = {
   access_token?: string
@@ -55,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (tokens.access_token) {
         try {
           const me = await authApi.me(tokens.access_token)
-          setUser({ id: me.id, email: me.email })
+          setUser(me)
         } catch (err) {
           // try refresh
           if (tokens.refresh_token) {
@@ -63,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const res = await authApi.refresh({ refresh_token: tokens.refresh_token })
               setStoredTokens(res.session)
               const me2 = await authApi.me(res.session.access_token)
-              setUser({ id: me2.id, email: me2.email })
+              setUser(me2)
             } catch (e) {
               setStoredTokens(undefined)
               setUser(null)
@@ -82,8 +78,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true)
     try {
       const res = await authApi.login({ email, password })
-      if (res.session) setStoredTokens(res.session)
-      if (res.user) setUser({ id: res.user.id, email: res.user.email })
+      if (res.session) {
+        setStoredTokens(res.session)
+        // Fetch full user profile
+        const profile = await authApi.me(res.session.access_token)
+        setUser(profile)
+      }
     } finally {
       setLoading(false)
     }
@@ -93,8 +93,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true)
     try {
       const res = await authApi.signup(payload)
-      if (res.session) setStoredTokens(res.session)
-      if (res.user) setUser({ id: res.user.id, email: res.user.email })
+      if (res.session) {
+        setStoredTokens(res.session)
+        // Fetch full user profile
+        const profile = await authApi.me(res.session.access_token)
+        setUser(profile)
+      }
     } finally {
       setLoading(false)
     }

@@ -32,7 +32,7 @@ export const UserAvatar = ({
   showStatus = false,
   isOnline = false,
 }: UserAvatarProps) => {
-  const initials = name
+  const initials = (name || "User")
     .split(" ")
     .map((n) => n[0])
     .join("")

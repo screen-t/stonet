@@ -43,21 +43,21 @@ def signup(payload: SignupRequest, request: Request):
             with open('signup_debug.log', 'a') as f:
                 f.write(json.dumps(debug) + "\n")
         except Exception as e:
-            print(f"❌ Failed to write signup debug log: {e}")
+            print(f"Failed to write signup debug log: {e}")
     except Exception as e:
-        print(f"❌ Supabase sign_up exception: {e}")
+        print(f"Supabase sign_up exception: {e}")
         # Write exception to log for inspection
         try:
             with open('signup_exception.log', 'a') as f:
                 f.write(str(e) + "\n")
         except Exception as log_e:
-            print(f"❌ Failed to write signup_exception.log: {log_e}")
+            print(f"Failed to write signup_exception.log: {log_e}")
         raise HTTPException(status_code=500, detail=f"Signup failed: {str(e)}")
 
     if auth_res.user is None:
         # If Supabase returned a known error payload, include it
         err_msg = getattr(auth_res, 'error', None) or "User with this email already exists"
-        print(f"⚠️ sign_up response has no user, error: {err_msg}")
+        print(f"WARNING: sign_up response has no user, error: {err_msg}")
         raise HTTPException(
             status_code=409,
             detail=str(err_msg)
@@ -231,23 +231,23 @@ def me(user=Depends(require_auth)):
 # Check username availability
 @router.get("/check-username")
 def check_username(username: str):
-    print(f"🔍 /auth/check-username called with username: '{username}'")
+    print(f"DEBUG: /auth/check-username called with username: '{username}'")
     
     if not username:
-        print("❌ No username provided")
+        print("No username provided")
         raise HTTPException(status_code=400, detail="username query parameter required")
     
     if not username.strip():
-        print("❌ Empty username provided")
+        print("Empty username provided")
         raise HTTPException(status_code=400, detail="username cannot be empty")
         
     try:
-        print(f"📋 Calling check_username_availability for: '{username}'")
+        print(f"Calling check_username_availability for: '{username}'")
         available = check_username_availability(username)
-        print(f"✅ Username availability result: {available}")
+        print(f"Username availability result: {available}")
         return {"available": available}
     except Exception as e:
-        print(f"❌ Unexpected error in /auth/check-username: {e}")
+        print(f"Unexpected error in /auth/check-username: {e}")
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")

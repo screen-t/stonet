@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check Auth Token</title>
+</head>
+<body>
+    <h1>Auth Token Status</h1>
+    <p id="result">Checking...</p>
+    <button onclick="location.reload()">Refresh</button>
+    <script>
+        const token = localStorage.getItem('access_token');
+        const resultEl = document.getElementById('result');
+        
+        if (token) {
+            resultEl.innerHTML = `<strong style="color: green;">Token EXISTS</strong><br>Token: ${token.substring(0, 50)}...`;
+        } else {
+            resultEl.innerHTML = '<strong style="color: red;">Token MISSING - You need to log in!</strong>';
+        }
+    </script>
+</body>
+</html>

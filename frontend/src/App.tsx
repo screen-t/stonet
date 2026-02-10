@@ -8,16 +8,24 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-import Onboarding from "./pages/Onboarding";
+import  Onboarding from "./pages/Onboarding";
 import { AuthProvider, RequireAuth } from "@/lib/auth";
 import Feed from "./pages/Feed";
+import FeedNew from "./pages/FeedNew";
 import Profile from "./pages/Profile";
+import ProfileNew from "./pages/ProfileNew";
 import Network from "./pages/Network";
+import NetworkNew from "./pages/NetworkNew";
 import Messages from "./pages/Messages";
+import MessagesNew from "./pages/MessagesNew";
 import Notifications from "./pages/Notifications";
+import NotificationsNew from "./pages/NotificationsNew";
+import SearchPage from "./pages/SearchPage";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import OAuthCallback from "./pages/OAuthCallBack";
+import Companies from "./pages/Companies";
+import Saved from "./pages/Saved";
 
 const queryClient = new QueryClient();
 
@@ -38,12 +46,17 @@ const App = () => (
             <Route path="/auth/callback" element={<OAuthCallback />} />
 
             {/* Protected routes */}
-            <Route path="/feed" element={<RequireAuth><Feed /></RequireAuth>} />
-            <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
-            <Route path="/network" element={<RequireAuth><Network /></RequireAuth>} />
-            <Route path="/messages" element={<RequireAuth><Messages /></RequireAuth>} />
-            <Route path="/notifications" element={<RequireAuth><Notifications /></RequireAuth>} />
+            <Route path="/feed" element={<RequireAuth><FeedNew /></RequireAuth>} />
+            <Route path="/profile" element={<RequireAuth><ProfileNew /></RequireAuth>} />
+            <Route path="/profile/:userId" element={<RequireAuth><ProfileNew /></RequireAuth>} />
+            <Route path="/network" element={<RequireAuth><NetworkNew /></RequireAuth>} />
+            <Route path="/messages" element={<RequireAuth><MessagesNew /></RequireAuth>} />
+            <Route path="/messages/:userId" element={<RequireAuth><MessagesNew /></RequireAuth>} />
+            <Route path="/notifications" element={<RequireAuth><NotificationsNew /></RequireAuth>} />
+            <Route path="/search" element={<RequireAuth><SearchPage /></RequireAuth>} />
             <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
+            <Route path="/companies" element={<RequireAuth><Companies /></RequireAuth>} />
+            <Route path="/saved" element={<RequireAuth><Saved /></RequireAuth>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

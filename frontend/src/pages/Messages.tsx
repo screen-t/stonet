@@ -89,7 +89,7 @@ const conversations: Conversation[] = [
 const messages: Message[] = [
   {
     id: "1",
-    content: "Hi Sarah! I saw your post about the Series B funding. Congratulations! 🎉",
+    content: "Hi Sarah! I saw your post about the Series B funding. Congratulations!",
     sender: "me",
     timestamp: "10:30 AM",
     isRead: true,
