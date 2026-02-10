@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,8 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useAuth } from "@/lib/auth";
+import { backendApi } from "@/lib/backend-api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   User,
   Bell,
@@ -17,19 +19,41 @@ import {
   LogOut,
   Camera,
   Save,
+  Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Settings = () => {
   const { toast } = useToast();
-  const { logout } = useAuth();
-  const [profile, setProfile] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@company.com",
-    username: "johndoe",
-    headline: "Product Manager at Nexus",
+  const { logout, user } = useAuth();
+  const queryClient = useQueryClient();
+
+  // Fetch profile data
+  const { data: profileData, isLoading } = useQuery({
+    queryKey: ['profile', 'me'],
+    queryFn: () => backendApi.profile.getMyProfile(),
   });
+
+  const [profile, setProfile] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    username: "",
+    headline: "",
+  });
+
+  // Update local state when profile data loads
+  useEffect(() => {
+    if (profileData) {
+      setProfile({
+        firstName: profileData.first_name || "",
+        lastName: profileData.last_name || "",
+        email: profileData.email || "",
+        username: profileData.username || "",
+        headline: profileData.headline || "",
+      });
+    }
+  }, [profileData]);
 
   const [notifications, setNotifications] = useState({
     emailDigest: true,
@@ -47,10 +71,31 @@ const Settings = () => {
     allowMessages: true,
   });
 
+  // Mutation to update profile
+  const updateProfileMutation = useMutation({
+    mutationFn: (data: any) => backendApi.profile.updateProfile(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile', 'me'] });
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been saved successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update profile.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSaveProfile = () => {
-    toast({
-      title: "Profile updated",
-      description: "Your profile has been saved successfully.",
+    updateProfileMutation.mutate({
+      first_name: profile.firstName,
+      last_name: profile.lastName,
+      username: profile.username,
+      headline: profile.headline,
     });
   };
   const handleLogout = async () => {
@@ -70,7 +115,12 @@ const Settings = () => {
   };
   return (
     <AppLayout>
-      <div className="space-y-6">
+      {isLoading ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      ) : (
+        <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold">Settings</h1>
           <p className="text-muted-foreground">
@@ -105,8 +155,8 @@ const Settings = () => {
               <div className="flex items-center gap-6">
                 <div className="relative">
                   <UserAvatar
-                    name="John Doe"
-                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200"
+                    name={`${profile.firstName} ${profile.lastName}`}
+                    src={profileData?.avatar_url}
                     size="xl"
                   />
                   <button className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors">
@@ -185,8 +235,16 @@ const Settings = () => {
               </div>
 
               <div className="flex justify-end">
-                <Button onClick={handleSaveProfile} className="gap-2">
-                  <Save className="h-4 w-4" />
+                <Button 
+                  onClick={handleSaveProfile} 
+                  className="gap-2"
+                  disabled={updateProfileMutation.isPending}
+                >
+                  {updateProfileMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
                   Save Changes
                 </Button>
               </div>
@@ -396,6 +454,7 @@ const Settings = () => {
           </TabsContent>
         </Tabs>
       </div>
+      )}
     </AppLayout>
   );
 };

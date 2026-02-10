@@ -1,11 +1,31 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { CreatePostBox } from "@/components/feed/CreatePostBox";
 import { CreatePostModal } from "@/components/feed/CreatePostModal";
 import { PostCard, PostData } from "@/components/feed/PostCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
-import { Sparkles, Users } from "lucide-react";
+import { Sparkles, Users, Loader2 } from "lucide-react";
+import { backendApi } from "@/lib/backend-api";
+
+// Helper function to format time ago
+function formatTimeAgo(date: Date): string {
+  const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+  
+  if (seconds < 60) return "Just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  const weeks = Math.floor(days / 7);
+  if (weeks < 4) return `${weeks}w ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}mo ago`;
+  return `${Math.floor(months / 12)}y ago`;
+}
 
 const samplePosts: PostData[] = [
   {
@@ -17,7 +37,7 @@ const samplePosts: PostData[] = [
       headline: "CEO at TechVentures | Building the future of AI",
     },
     content:
-      "Excited to announce that TechVentures just closed our Series B! 🚀\n\nThis journey wouldn't be possible without our amazing team and investors who believed in our vision.\n\nWe're hiring across all departments - DM me if you want to be part of something special!",
+      "Excited to announce that TechVentures just closed our Series B!\n\nThis journey wouldn't be possible without our amazing team and investors who believed in our vision.\n\nWe're hiring across all departments - DM me if you want to be part of something special!",
     image:
       "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800",
     tags: ["#Funding", "#Startup", "#Hiring"],
@@ -75,7 +95,7 @@ const samplePosts: PostData[] = [
       headline: "Engineering Lead at DataFlow | Open Source Contributor",
     },
     content:
-      "Just published a deep dive into how we handle 10M+ events per second at DataFlow.\n\nThe secret? It's not about the technology - it's about understanding your data patterns first.\n\nLink in comments 👇",
+      "Just published a deep dive into how we handle 10M+ events per second at DataFlow.\n\nThe secret? It's not about the technology - it's about understanding your data patterns first.\n\nLink in comments",
     image:
       "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800",
     tags: ["#Engineering", "#DataEngineering", "#Architecture"],
@@ -91,40 +111,58 @@ const samplePosts: PostData[] = [
 
 const Feed = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [posts, setPosts] = useState(samplePosts);
   const [activeTab, setActiveTab] = useState("for-you");
+
+  // Fetch posts from backend
+  const { data: postsData, isLoading, isError, refetch } = useQuery({
+    queryKey: ["posts", "feed", activeTab],
+    queryFn: () => backendApi.posts.getFeed(activeTab === "for-you" ? "for_you" : "following", 50, 0),
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
 
   const handleCreatePost = (data: {
     content: string;
     visibility: string;
     image?: string;
   }) => {
-    const newPost: PostData = {
-      id: Date.now().toString(),
-      author: {
-        name: "John Doe",
-        username: "johndoe",
-        avatar:
-          "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100",
-        headline: "Product Manager at stonet",
-      },
-      content: data.content,
-      image: data.image,
-      likes: 0,
-      comments: 0,
-      shares: 0,
-      isLiked: false,
-      isSaved: false,
-      visibility: data.visibility as "public" | "connections" | "private",
-      createdAt: "Just now",
-    };
-    setPosts([newPost, ...posts]);
+    // Close modal and refetch posts
+    setIsCreateModalOpen(false);
+    refetch();
   };
+
+  // Map backend posts to PostData format
+  const posts: PostData[] = postsData?.map((post: any) => {
+    const firstName = post.author?.first_name || '';
+    const lastName = post.author?.last_name || '';
+    const fullName = [firstName, lastName].filter(Boolean).join(' ');
+    
+    return {
+      id: post.id,
+      author: {
+        name: fullName || post.author?.username || "Unknown User",
+        username: post.author?.username || "user",
+        avatar: post.author?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${post.author?.username || 'user'}`,
+        headline: post.author?.headline || "",
+      },
+      content: post.content,
+      image: post.media?.[0]?.url,
+      tags: post.hashtags?.map((tag: string) => `#${tag}`) || [],
+      likes: post.like_count || 0,
+      comments: post.comment_count || 0,
+      shares: post.share_count || 0,
+      isLiked: post.is_liked || false,
+      isSaved: post.is_saved || false,
+      visibility: post.visibility as "public" | "connections" | "private",
+      createdAt: formatTimeAgo(new Date(post.created_at)),
+    };
+  }) || [];
+
+  console.log('Feed Debug:', { postsData, posts, postsLength: posts.length, activeTab, isLoading, isError });
 
   // Filter posts based on tab
   const displayedPosts = activeTab === "for-you" 
-    ? posts // In production, this would be algorithmically sorted
-    : posts.filter(post => post.visibility === "connections"); // Following tab shows connection posts
+    ? posts
+    : posts.filter(post => post.visibility === "connections");
 
   return (
     <AppLayout>
@@ -144,30 +182,76 @@ const Feed = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value={activeTab} className="mt-6">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="space-y-4"
-            >
-              {displayedPosts.length > 0 ? (
-                displayedPosts.map((post, index) => (
-                  <motion.div
-                    key={post.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <PostCard post={post} />
-                  </motion.div>
-                ))
-              ) : (
-                <div className="text-center py-12 text-muted-foreground">
-                  <p>No posts to show. Start following people to see their posts!</p>
-                </div>
-              )}
-            </motion.div>
+          <TabsContent value="for-you" className="mt-6">
+            {isLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : isError ? (
+              <div className="text-center py-12 text-destructive">
+                <p>Failed to load posts. Please try again.</p>
+              </div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="space-y-4"
+              >
+                {posts.length > 0 ? (
+                  posts.map((post, index) => (
+                    <motion.div
+                      key={post.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                    >
+                      <PostCard post={post} />
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <p className="text-lg font-semibold mb-2">No posts yet</p>
+                    <p>Be the first to create a post or connect with others!</p>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="following" className="mt-6">
+            {isLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : isError ? (
+              <div className="text-center py-12 text-destructive">
+                <p>Failed to load posts. Please try again.</p>
+              </div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="space-y-4"
+              >
+                {displayedPosts.length > 0 ? (
+                  displayedPosts.map((post, index) => (
+                    <motion.div
+                      key={post.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                    >
+                      <PostCard post={post} />
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <p className="text-lg font-semibold mb-2">No posts yet</p>
+                    <p>Be the first to create a post or connect with others!</p>
+                  </div>
+                )}
+              </motion.div>
+            )}
           </TabsContent>
         </Tabs>
       </div>

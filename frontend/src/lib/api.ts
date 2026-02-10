@@ -1,5 +1,7 @@
 import { supabase } from './supabase'
 
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+
 export const authApi = {
   me: async (accessToken?: string) => {
     const { data: { user }, error } = await supabase.auth.getUser(accessToken)
@@ -9,10 +11,36 @@ export const authApi = {
     if (!user) {
       throw new Error('User not found')
     }
+    
+    // Fetch full user profile from backend
+    try {
+      const response = await fetch(`${API_BASE_URL}/profile/me`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken || localStorage.getItem('access_token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const profile = await response.json();
+        return profile;
+      }
+    } catch (e) {
+      console.error('Failed to fetch profile:', e);
+    }
+    
+    // Fallback to auth user data if profile fetch fails
     return {
       id: user.id,
       email: user.email || '',
-      ...user.user_metadata
+      username: user.user_metadata?.username || user.email?.split('@')[0] || '',
+      first_name: user.user_metadata?.first_name || '',
+      last_name: user.user_metadata?.last_name || '',
+      avatar_url: user.user_metadata?.avatar_url || undefined,
+      email_visible: false,
+      account_type: 'personal' as const,
+      created_at: user.created_at || '',
+      updated_at: user.updated_at || ''
     }
   },
   refresh: async (data: { refresh_token: string }) => {

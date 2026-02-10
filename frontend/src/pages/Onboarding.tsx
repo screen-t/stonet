@@ -204,7 +204,7 @@ const Onboarding = () => {
 
                 <div className="p-4 bg-muted/50 rounded-lg border border-muted">
                   <p className="text-sm text-muted-foreground">
-                    <strong>💡 Tip:</strong> You can skip this and add more details
+                    <strong>Tip:</strong> You can skip this and add more details
                     later from your profile settings. We believe in flexibility -
                     add what matters to you!
                   </p>

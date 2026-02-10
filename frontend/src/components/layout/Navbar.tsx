@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useAuth } from "@/lib/auth";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { backendApi } from "@/lib/backend-api";
+import { CreatePostModalNew } from "@/components/feed/CreatePostModalNew";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,10 +35,30 @@ interface NavbarProps {
 export const Navbar = ({ isAuthenticated = false }: NavbarProps) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const location = useLocation();
   const { logout, user } = useAuth();
+  const queryClient = useQueryClient();
 
   const isLandingPage = location.pathname === "/" && !isAuthenticated;
+
+  // Fetch unread counts
+  const { data: messageCount } = useQuery({
+    queryKey: ['unreadMessages'],
+    queryFn: () => backendApi.messages.getUnreadCount(),
+    enabled: isAuthenticated,
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
+
+  const { data: notificationCount } = useQuery({
+    queryKey: ['unreadNotifications'],
+    queryFn: () => backendApi.notifications.getUnreadCount(),
+    enabled: isAuthenticated,
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
+
+  const unreadMessages = messageCount?.count || 0;
+  const unreadNotifications = notificationCount?.count || 0;
 
   const handleLogout = async () => {
     try {
@@ -73,19 +96,32 @@ export const Navbar = ({ isAuthenticated = false }: NavbarProps) => {
           {/* Desktop Actions */}
           {isAuthenticated ? (
             <div className="hidden md:flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="relative">
-                <MessageSquare className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 h-4 w-4 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center">
-                  3
-                </span>
+              <Button variant="ghost" size="icon" className="relative" asChild>
+                <Link to="/messages">
+                  <MessageSquare className="h-5 w-5" />
+                  {unreadMessages > 0 && (
+                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center">
+                      {unreadMessages}
+                    </span>
+                  )}
+                </Link>
               </Button>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 h-4 w-4 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center">
-                  5
-                </span>
+              <Button variant="ghost" size="icon" className="relative" asChild>
+                <Link to="/notifications">
+                  <Bell className="h-5 w-5" />
+                  {unreadNotifications > 0 && (
+                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center">
+                      {unreadNotifications}
+                    </span>
+                  )}
+                </Link>
               </Button>
-              <Button variant="default" size="sm" className="gap-2">
+              <Button 
+                variant="default" 
+                size="sm" 
+                className="gap-2"
+                onClick={() => setIsCreatePostOpen(true)}
+              >
                 <PlusCircle className="h-4 w-4" />
                 Create Post
               </Button>
@@ -93,16 +129,16 @@ export const Navbar = ({ isAuthenticated = false }: NavbarProps) => {
                 <DropdownMenuTrigger asChild>
                   <button className="focus:outline-none">
                     <UserAvatar
-                      name="John Doe"
-                      src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100"
+                      name={`${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.email || "User"}
+                      src={user?.avatar_url}
                       size="sm"
                     />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <div className="px-2 py-1.5">
-                    <p className="font-semibold">John Doe</p>
-                    <p className="text-sm text-muted-foreground">@johndoe</p>
+                    <p className="font-semibold">{user?.first_name} {user?.last_name}</p>
+                    <p className="text-sm text-muted-foreground">@{user?.username}</p>
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
@@ -171,16 +207,24 @@ export const Navbar = ({ isAuthenticated = false }: NavbarProps) => {
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    <Button variant="outline" className="gap-2">
-                      <MessageSquare className="h-4 w-4" />
-                      Messages
+                    <Button variant="outline" className="gap-2" asChild>
+                      <Link to="/messages">
+                        <MessageSquare className="h-4 w-4" />
+                        Messages {unreadMessages > 0 && `(${unreadMessages})`}
+                      </Link>
                     </Button>
-                    <Button variant="outline" className="gap-2">
-                      <Bell className="h-4 w-4" />
-                      Notifications
+                    <Button variant="outline" className="gap-2" asChild>
+                      <Link to="/notifications">
+                        <Bell className="h-4 w-4" />
+                        Notifications {unreadNotifications > 0 && `(${unreadNotifications})`}
+                      </Link>
                     </Button>
                   </div>
-                  <Button variant="default" className="w-full gap-2">
+                  <Button 
+                    variant="default" 
+                    className="w-full gap-2"
+                    onClick={() => setIsCreatePostOpen(true)}
+                  >
                     <PlusCircle className="h-4 w-4" />
                     Create Post
                   </Button>
@@ -199,6 +243,16 @@ export const Navbar = ({ isAuthenticated = false }: NavbarProps) => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Create Post Modal */}
+      <CreatePostModalNew
+        isOpen={isCreatePostOpen}
+        onClose={() => setIsCreatePostOpen(false)}
+        onPostCreated={() => {
+          queryClient.invalidateQueries({ queryKey: ['posts'] });
+          setIsCreatePostOpen(false);
+        }}
+      />
     </nav>
   );
 };

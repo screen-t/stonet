@@ -1,19 +1,23 @@
-import { useState } from "react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Image, FileText, Calendar, BarChart3 } from "lucide-react";
+import { useAuth } from "@/lib/auth";
 
-interface CreatePostBoxProps {
+export interface CreatePostBoxProps {
   onOpenModal: () => void;
 }
 
 export const CreatePostBox = ({ onOpenModal }: CreatePostBoxProps) => {
+  const { user } = useAuth();
+  
+  const userFullName = [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.email || "User";
+
   return (
     <div className="bg-card rounded-xl border border-border p-4 shadow-sm">
       <div className="flex items-start gap-3">
         <UserAvatar
-          name="John Doe"
-          src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100"
+          name={userFullName}
+          src={user?.avatar_url}
           size="md"
         />
         <button
