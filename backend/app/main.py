@@ -13,15 +13,20 @@ from app.routes.search import router as search_router
 app = FastAPI(title="Stonet Backend API")
 
 # CORS settings - allow frontend development and production hosts
+import os
+
 origins = [
     "http://localhost:5173",  # Vite dev server
     "http://localhost:8080",  # Alternative dev port
     "http://localhost:3000",  # React dev server
     "http://127.0.0.1:8080",  # Localhost alternative
     "http://127.0.0.1:5173",
-    # Add your production frontend URL when ready:
-    # "https://your-app.vercel.app"
 ]
+
+# Add production frontend URL from environment variable
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    origins.append(frontend_url)
 
 app.add_middleware(
     CORSMiddleware,

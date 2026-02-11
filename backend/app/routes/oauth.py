@@ -6,13 +6,14 @@ import os
 router = APIRouter(prefix="/auth/oauth", tags=["OAuth"])
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
 @router.get("/google")
 def google_oauth():
     res = supabase.auth.sign_in_with_oauth({
         "provider": "google",
         "options": {
-            "redirect_to": f"http://localhost:8000/auth/oauth/callback"
+            "redirect_to": f"{BACKEND_URL}/auth/oauth/callback"
         }
     })
     return {"url": res.url}
@@ -22,7 +23,7 @@ def github_oauth():
     res = supabase.auth.sign_in_with_oauth({
         "provider": "github",
         "options": {
-            "redirect_to": f"http://localhost:8000/auth/oauth/callback"
+            "redirect_to": f"{BACKEND_URL}/auth/oauth/callback"
         }
     })
     return {"url": res.url}
@@ -32,7 +33,7 @@ def linkedin_oauth():
     res = supabase.auth.sign_in_with_oauth({
         "provider": "linkedin_oidc",
         "options": {
-            "redirect_to": f"http://localhost:8000/auth/oauth/callback"
+            "redirect_to": f"{BACKEND_URL}/auth/oauth/callback"
         }
     })
     return {"url": res.url}
