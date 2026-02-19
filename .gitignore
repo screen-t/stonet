@@ -151,3 +151,8 @@ __pypackages__/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Allow specific frontend lib files (compat re-exports) even though `lib/` is ignored
+!frontend/src/lib/backend-api.ts
+!frontend/src/lib/backendApi.ts
+!frontend/src/lib/backend_api.ts
