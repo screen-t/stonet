@@ -167,7 +167,7 @@ These features have backend APIs but frontend needs connection:
 - [ ] Service role key used only in backend
 - [ ] Anon key used in frontend (not service role key)
 
----
+--- 
 
 ## 📊 DEPLOYMENT READINESS SCORE: 75%
 
