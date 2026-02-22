@@ -129,7 +129,12 @@ export const PostCardNew = ({ post }: PostCardNewProps) => {
   };
 
   const handleVote = (optionIndex: number) => {
-    backendApi.posts.votePoll(post.id, optionIndex)
+    const optionId = (post as { poll?: { options?: Array<{ id: string }> } }).poll?.options?.[optionIndex]?.id;
+    if (!optionId) {
+      toast({ title: "Failed to vote", variant: "destructive" });
+      return;
+    }
+    backendApi.posts.votePoll(post.id, optionId)
       .then(() => {
         toast({ title: "Vote recorded!" });
         queryClient.invalidateQueries({ queryKey: ['feed'] });
