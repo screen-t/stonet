@@ -77,7 +77,7 @@ Desktop.ini
 # pnpm-lock.yaml
 bun.lockb
 
-# Python
+# Python (only ignore at repo root to avoid ignoring frontend/src/lib and backend/app/lib)
 __pycache__/
 *.py[cod]
 *$py.class
@@ -89,7 +89,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+/lib/
 lib64/
 parts/
 sdist/
@@ -152,7 +152,4 @@ __pypackages__/
 .dmypy.json
 dmypy.json
 
-# Allow specific frontend lib files (compat re-exports) even though `lib/` is ignored
-!frontend/src/lib/backend-api.ts
-!frontend/src/lib/backendApi.ts
-!frontend/src/lib/backend_api.ts
+# frontend/src/lib/ and backend/app/lib/ are tracked; only root /lib/ is ignored
