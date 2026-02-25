@@ -22,14 +22,24 @@ def get_my_profile(user_id: str = Depends(require_auth)):
     except Exception as e:
         raise HTTPException(status_code=404, detail="Profile not found")
 
-@router.get("/{username}", response_model=ProfileResponse)
-def get_profile_by_username(username: str):
-    """Get user profile by username (public)"""
+@router.get("/{identifier}", response_model=ProfileResponse)
+def get_profile_by_username(identifier: str):
+    """Get user profile by username or user UUID (public)"""
+    import re
+    uuid_pattern = re.compile(
+        r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+        re.IGNORECASE
+    )
     try:
-        response = supabase.table("users").select("*").eq("username", username).single().execute()
+        if uuid_pattern.match(identifier):
+            response = supabase.table("users").select("*").eq("id", identifier).single().execute()
+        else:
+            response = supabase.table("users").select("*").eq("username", identifier).single().execute()
         if not response.data:
             raise HTTPException(status_code=404, detail="User not found")
         return response.data
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=404, detail="User not found")
 

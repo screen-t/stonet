@@ -16,6 +16,7 @@ import {
   Image,
   Check,
   CheckCheck,
+  ArrowLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -121,6 +122,12 @@ const Messages = () => {
   const [selectedConversation, setSelectedConversation] = useState(conversations[0]);
   const [newMessage, setNewMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showChat, setShowChat] = useState(false); // mobile: toggle list/chat
+
+  const handleSelectConversation = (conv: Conversation) => {
+    setSelectedConversation(conv);
+    setShowChat(true);
+  };
 
   const handleSendMessage = () => {
     if (!newMessage.trim()) return;
@@ -136,8 +143,12 @@ const Messages = () => {
         className="bg-card rounded-xl border border-border overflow-hidden h-[calc(100vh-10rem)]"
       >
         <div className="flex h-full">
-          {/* Conversation List */}
-          <div className="w-80 border-r border-border flex flex-col">
+          {/* Conversation List — always visible on desktop; hidden on mobile when chat is open */}
+          <div className={cn(
+            "border-r border-border flex flex-col",
+            "w-full md:w-80 md:flex",
+            showChat ? "hidden md:flex" : "flex"
+          )}>
             <div className="p-4 border-b border-border">
               <h2 className="font-semibold text-lg mb-3">Messages</h2>
               <div className="relative">
@@ -155,7 +166,7 @@ const Messages = () => {
                 {conversations.map((conv) => (
                   <button
                     key={conv.id}
-                    onClick={() => setSelectedConversation(conv)}
+                    onClick={() => handleSelectConversation(conv)}
                     className={cn(
                       "w-full flex items-start gap-3 p-3 rounded-lg transition-colors text-left",
                       selectedConversation.id === conv.id
@@ -192,11 +203,23 @@ const Messages = () => {
             </ScrollArea>
           </div>
 
-          {/* Chat Area */}
-          <div className="flex-1 flex flex-col">
+          {/* Chat Area — always visible on desktop; shown on mobile only when a conversation is selected */}
+          <div className={cn(
+            "flex-1 flex flex-col",
+            showChat ? "flex" : "hidden md:flex"
+          )}>
             {/* Chat Header */}
             <div className="p-4 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-3">
+                {/* Back button — mobile only */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="md:hidden -ml-1"
+                  onClick={() => setShowChat(false)}
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
                 <UserAvatar
                   name={selectedConversation.user.name}
                   src={selectedConversation.user.avatar}
@@ -212,10 +235,10 @@ const Messages = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="hidden sm:inline-flex">
                   <Phone className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="hidden sm:inline-flex">
                   <Video className="h-4 w-4" />
                 </Button>
                 <Button variant="ghost" size="icon">

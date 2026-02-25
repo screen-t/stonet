@@ -259,12 +259,12 @@ export const Profile = () => {
           className="bg-card rounded-xl border border-border overflow-hidden"
         >
           {/* Banner */}
-          <div className="h-32 bg-gradient-primary relative">
+          <div className="h-32 md:h-48 bg-gradient-primary relative">
             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yIDItNCAyLTRzMiAyIDIgNC0yIDQtMiA0LTItMi0yLTR6bTAtMTJjMC0yIDItNCAyLTRzMiAyIDIgNC0yIDQtMiA0LTItMi0yLTR6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-30" />
           </div>
 
           {/* Profile Info */}
-          <div className="px-6 pb-6">
+          <div className="px-4 md:px-6 pb-6">
             <div className="relative -mt-16 mb-4">
               <UserAvatar
                 name={`${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || profileData.username || 'User'}
@@ -342,11 +342,11 @@ export const Profile = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="posts" className="space-y-6">
-          <TabsList className="bg-card border border-border">
-            <TabsTrigger value="posts">Posts</TabsTrigger>
-            <TabsTrigger value="about">About</TabsTrigger>
-            <TabsTrigger value="skills">Skills</TabsTrigger>
-            <TabsTrigger value="connections">Connections</TabsTrigger>
+          <TabsList className="bg-card border border-border w-full overflow-x-auto flex">
+            <TabsTrigger value="posts" className="flex-1 min-w-[70px]">Posts</TabsTrigger>
+            <TabsTrigger value="about" className="flex-1 min-w-[70px]">About</TabsTrigger>
+            <TabsTrigger value="skills" className="flex-1 min-w-[70px]">Skills</TabsTrigger>
+            <TabsTrigger value="connections" className="flex-1 min-w-[90px]">Connections</TabsTrigger>
           </TabsList>
 
           <TabsContent value="posts" className="space-y-4">

@@ -42,8 +42,10 @@ export const WorkExperienceSection = ({ userId, isOwnProfile }: WorkExperienceSe
   const { data: experiences = [], isLoading } = useQuery({
     queryKey: ['workExperience', userId],
     queryFn: async () => {
-      const profile = await backendApi.profile.getProfile(userId);
-      return profile.work_experience || [];
+      const profile = isOwnProfile
+        ? await backendApi.profile.getMyProfile()
+        : await backendApi.profile.getProfile(userId);
+      return (profile as any).work_experience || [];
     },
   });
 

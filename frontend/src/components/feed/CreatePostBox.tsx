@@ -27,42 +27,42 @@ export const CreatePostBox = ({ onOpenModal }: CreatePostBoxProps) => {
           What's on your mind?
         </button>
       </div>
-      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
+      <div className="flex items-center gap-1 sm:gap-2 mt-3 pt-3 border-t border-border">
         <Button
           variant="ghost"
           size="sm"
-          className="flex-1 text-muted-foreground hover:text-primary gap-2"
+          className="flex-1 text-muted-foreground hover:text-primary gap-1 sm:gap-2 px-2 sm:px-3"
           onClick={onOpenModal}
         >
-          <Image className="h-4 w-4 text-primary" />
-          Photo
+          <Image className="h-4 w-4 text-primary flex-shrink-0" />
+          <span className="hidden sm:inline text-sm">Photo</span>
         </Button>
         <Button
           variant="ghost"
           size="sm"
-          className="flex-1 text-muted-foreground hover:text-primary gap-2"
+          className="flex-1 text-muted-foreground hover:text-primary gap-1 sm:gap-2 px-2 sm:px-3"
           onClick={onOpenModal}
         >
-          <FileText className="h-4 w-4 text-accent" />
-          Article
+          <FileText className="h-4 w-4 text-accent flex-shrink-0" />
+          <span className="hidden sm:inline text-sm">Article</span>
         </Button>
         <Button
           variant="ghost"
           size="sm"
-          className="flex-1 text-muted-foreground hover:text-primary gap-2"
+          className="flex-1 text-muted-foreground hover:text-primary gap-1 sm:gap-2 px-2 sm:px-3"
           onClick={onOpenModal}
         >
-          <Calendar className="h-4 w-4 text-orange-500" />
-          Event
+          <Calendar className="h-4 w-4 text-orange-500 flex-shrink-0" />
+          <span className="hidden sm:inline text-sm">Event</span>
         </Button>
         <Button
           variant="ghost"
           size="sm"
-          className="flex-1 text-muted-foreground hover:text-primary gap-2"
+          className="flex-1 text-muted-foreground hover:text-primary gap-1 sm:gap-2 px-2 sm:px-3"
           onClick={onOpenModal}
         >
-          <BarChart3 className="h-4 w-4 text-pink-500" />
-          Poll
+          <BarChart3 className="h-4 w-4 text-pink-500 flex-shrink-0" />
+          <span className="hidden sm:inline text-sm">Poll</span>
         </Button>
       </div>
     </div>

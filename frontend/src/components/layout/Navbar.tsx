@@ -24,6 +24,10 @@ import {
   User,
   Menu,
   X,
+  Home,
+  Users,
+  Building2,
+  Bookmark,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -70,7 +74,7 @@ export const Navbar = ({ isAuthenticated = false }: NavbarProps) => {
 
   return (
     <nav className="sticky top-0 z-50 glass-strong">
-      <div className="container mx-auto px-4">
+      <div className="max-w-screen-xl mx-auto px-3 sm:px-4">
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo */}
           <Link to={isAuthenticated ? "/feed" : "/"} className="flex items-center gap-2">
@@ -206,24 +210,52 @@ export const Navbar = ({ isAuthenticated = false }: NavbarProps) => {
                       className="pl-10 bg-secondary/50 border-0"
                     />
                   </div>
+
+                  {/* Primary nav links */}
                   <div className="grid grid-cols-2 gap-2">
-                    <Button variant="outline" className="gap-2" asChild>
+                    {[
+                      { icon: Home, label: "Feed", href: "/feed" },
+                      { icon: Users, label: "Network", href: "/network" },
+                      { icon: Building2, label: "Companies", href: "/companies" },
+                      { icon: Bookmark, label: "Saved", href: "/saved" },
+                      { icon: Settings, label: "Settings", href: "/settings" },
+                      { icon: User, label: "Profile", href: "/profile" },
+                    ].map(({ icon: Icon, label, href }) => (
+                      <Button
+                        key={href}
+                        variant="outline"
+                        className="gap-2 justify-start"
+                        asChild
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Link to={href}>
+                          <Icon className="h-4 w-4" />
+                          {label}
+                        </Link>
+                      </Button>
+                    ))}
+                  </div>
+
+                  {/* Notifications & Messages quick access */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button variant="outline" className="gap-2" asChild onClick={() => setIsMobileMenuOpen(false)}>
                       <Link to="/messages">
                         <MessageSquare className="h-4 w-4" />
                         Messages {unreadMessages > 0 && `(${unreadMessages})`}
                       </Link>
                     </Button>
-                    <Button variant="outline" className="gap-2" asChild>
+                    <Button variant="outline" className="gap-2" asChild onClick={() => setIsMobileMenuOpen(false)}>
                       <Link to="/notifications">
                         <Bell className="h-4 w-4" />
-                        Notifications {unreadNotifications > 0 && `(${unreadNotifications})`}
+                        Alerts {unreadNotifications > 0 && `(${unreadNotifications})`}
                       </Link>
                     </Button>
                   </div>
+
                   <Button 
                     variant="default" 
                     className="w-full gap-2"
-                    onClick={() => setIsCreatePostOpen(true)}
+                    onClick={() => { setIsCreatePostOpen(true); setIsMobileMenuOpen(false); }}
                   >
                     <PlusCircle className="h-4 w-4" />
                     Create Post

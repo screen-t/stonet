@@ -32,8 +32,10 @@ export const SkillsSection = ({ userId, isOwnProfile }: SkillsSectionProps) => {
   const { data: skills = [], isLoading } = useQuery({
     queryKey: ['skills', userId],
     queryFn: async () => {
-      const profile = await backendApi.profile.getProfile(userId);
-      return profile.skills || [];
+      const profile = isOwnProfile
+        ? await backendApi.profile.getMyProfile()
+        : await backendApi.profile.getProfile(userId);
+      return (profile as any).skills || [];
     },
   });
 

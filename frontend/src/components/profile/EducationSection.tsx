@@ -43,8 +43,10 @@ export const EducationSection = ({ userId, isOwnProfile }: EducationSectionProps
   const { data: educations = [], isLoading } = useQuery({
     queryKey: ['education', userId],
     queryFn: async () => {
-      const profile = await backendApi.profile.getProfile(userId);
-      return profile.education || [];
+      const profile = isOwnProfile
+        ? await backendApi.profile.getMyProfile()
+        : await backendApi.profile.getProfile(userId);
+      return (profile as any).education || [];
     },
   });
 

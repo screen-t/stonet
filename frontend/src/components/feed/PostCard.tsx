@@ -93,11 +93,11 @@ export const PostCard = ({
     <motion.article
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card rounded-xl border border-border p-5 shadow-sm hover:shadow-md transition-shadow"
+      className="bg-card rounded-xl border border-border p-3 sm:p-5 shadow-sm hover:shadow-md transition-shadow w-full min-w-0"
     >
       {/* Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-start gap-3">
+      <div className="flex items-start justify-between mb-4 min-w-0">
+        <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1">
           <UserAvatar
             name={post.author.name}
             src={post.author.avatar}
@@ -105,16 +105,16 @@ export const PostCard = ({
             showStatus
             isOnline
           />
-          <div>
-            <div className="flex items-center gap-2">
-              <h4 className="font-semibold hover:text-primary cursor-pointer transition-colors">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+              <h4 className="font-semibold hover:text-primary cursor-pointer transition-colors truncate max-w-[120px] sm:max-w-none">
                 {post.author.name}
               </h4>
-              <span className="text-muted-foreground text-sm">
+              <span className="text-muted-foreground text-sm truncate hidden sm:inline">
                 @{post.author.username}
               </span>
             </div>
-            <p className="text-sm text-muted-foreground">{post.author.headline}</p>
+            <p className="text-sm text-muted-foreground truncate">{post.author.headline}</p>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-xs text-muted-foreground">{post.createdAt}</span>
               <VisibilityIcon className="h-3 w-3 text-muted-foreground" />
@@ -164,48 +164,48 @@ export const PostCard = ({
 
       {/* Actions */}
       <div className="flex items-center justify-between pt-3 border-t border-border">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0 sm:gap-1">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleLike}
             className={cn(
-              "gap-2 text-muted-foreground hover:text-primary",
+              "gap-1.5 text-muted-foreground hover:text-primary px-2 sm:px-3",
               isLiked && "text-primary"
             )}
           >
             <Heart
               className={cn("h-4 w-4", isLiked && "fill-current")}
             />
-            <span>{likes}</span>
+            <span className="text-xs">{likes}</span>
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => onComment?.(post.id)}
-            className="gap-2 text-muted-foreground hover:text-primary"
+            className="gap-1.5 text-muted-foreground hover:text-primary px-2 sm:px-3"
           >
             <MessageCircle className="h-4 w-4" />
-            <span>{post.comments}</span>
+            <span className="text-xs">{post.comments}</span>
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleRepost}
             className={cn(
-              "gap-2 text-muted-foreground hover:text-green-600",
+              "gap-1.5 text-muted-foreground hover:text-green-600 px-2 sm:px-3",
               isReposted && "text-green-600"
             )}
             title="Repost"
           >
             <Repeat2 className="h-4 w-4" />
-            <span>{repostCount}</span>
+            <span className="text-xs hidden sm:inline">{repostCount}</span>
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => onShare?.(post.id)}
-            className="gap-2 text-muted-foreground hover:text-primary"
+            className="gap-1.5 text-muted-foreground hover:text-primary px-2 sm:px-3"
             title="Share"
           >
             <Share2 className="h-4 w-4" />
@@ -216,7 +216,7 @@ export const PostCard = ({
           size="icon"
           onClick={handleSave}
           className={cn(
-            "text-muted-foreground hover:text-primary",
+            "text-muted-foreground hover:text-primary h-8 w-8",
             isSaved && "text-primary"
           )}
           title="Save post"

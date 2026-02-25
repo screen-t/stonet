@@ -16,17 +16,29 @@ app = FastAPI(title="Stonet Backend API")
 import os
 
 origins = [
-    "http://localhost:5173",  # Vite dev server
-    "http://localhost:8080",  # Alternative dev port
-    "http://localhost:3000",  # React dev server
-    "http://127.0.0.1:8080",  # Localhost alternative
+    # Local development
+    "http://localhost:5173",
+    "http://localhost:8080",
+    "http://localhost:3000",
     "http://127.0.0.1:5173",
+    "http://127.0.0.1:8080",
+    # Production (hardcoded known URLs)
+    "https://stonet.vercel.app",
+    "https://www.stonet.vercel.app",
 ]
 
-# Add production frontend URL from environment variable
-frontend_url = os.getenv("FRONTEND_URL")
-if frontend_url:
+# Also support FRONTEND_URL env var (single URL)
+frontend_url = os.getenv("FRONTEND_URL", "").strip()
+if frontend_url and frontend_url not in origins:
     origins.append(frontend_url)
+
+# Also support ALLOWED_ORIGINS env var (comma-separated list of extra URLs)
+extra_origins = os.getenv("ALLOWED_ORIGINS", "").strip()
+if extra_origins:
+    for url in extra_origins.split(","):
+        url = url.strip()
+        if url and url not in origins:
+            origins.append(url)
 
 app.add_middleware(
     CORSMiddleware,
