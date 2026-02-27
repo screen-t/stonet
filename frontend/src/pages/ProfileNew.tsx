@@ -44,13 +44,11 @@ export const ProfilePage = () => {
   // Fetch profile data
   const { data: profile, isLoading, error } = useQuery<Profile>({
     queryKey: ['profile', profileUserId],
-    queryFn: () => {
-      // Use /me endpoint for own profile
+    queryFn: async () => {
       if (isOwnProfile) {
-        return backendApi.profile.getMyProfile();
+        return backendApi.profile.getMyProfile() as Promise<Profile>;
       }
-      // For other users, we'd need username - for now return own profile
-      return backendApi.profile.getMyProfile();
+      return backendApi.profile.getProfile(profileUserId!) as Promise<Profile>;
     },
     enabled: !!profileUserId,
   });

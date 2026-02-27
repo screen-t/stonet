@@ -10,6 +10,38 @@ from typing import List, Optional
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
 
+# Safety net: auto-create a users row for any auth user not yet in the DB.
+# This handles accounts created before the frontend was fixed to call /auth/signup.
+def ensure_user_exists(user_id: str):
+    """Ensure a row exists in the users table for this auth user."""
+    try:
+        check = supabase.table("users").select("id").eq("id", user_id).execute()
+        if check.data:
+            return  # Already exists
+
+        # Fetch real email from Supabase Auth (service-role bypasses RLS)
+        auth_user_resp = supabase.auth.admin.get_user_by_id(user_id)
+        auth_user = auth_user_resp.user if auth_user_resp else None
+        email = (auth_user.email if auth_user and auth_user.email
+                 else f"{user_id[:8]}@placeholder.local")
+        username = f"user_{user_id[:8]}"
+
+        # Pull first/last name from user_metadata if present
+        metadata = auth_user.user_metadata if auth_user else {}
+        first_name = metadata.get("first_name") or "User"
+        last_name = metadata.get("last_name") or username
+
+        supabase.table("users").insert({
+            "id": user_id,
+            "email": email,
+            "username": username,
+            "first_name": first_name,
+            "last_name": last_name,
+            "is_verified": False,
+        }).execute()
+    except Exception as e:
+        print(f"ensure_user_exists error for {user_id}: {e}")
+
 # Helper function to enrich post with author and engagement data
 def enrich_post(post: dict, user_id: Optional[str] = None):
     """Enrich post with author info, media, poll data, and user engagement status"""
@@ -60,6 +92,7 @@ def enrich_post(post: dict, user_id: Optional[str] = None):
 @router.post("/", status_code=201)
 def create_post(payload: PostCreate, user_id: str = Depends(require_auth)):
     """Create a new post"""
+    ensure_user_exists(user_id)
     try:
         # Create post
         post_data = {
@@ -229,6 +262,7 @@ def delete_post(post_id: str, user_id: str = Depends(require_auth)):
 @router.post("/{post_id}/like")
 def like_post(post_id: str, user_id: str = Depends(require_auth)):
     """Like a post"""
+    ensure_user_exists(user_id)
     try:
         # Insert like
         supabase.table("post_likes").insert({"post_id": post_id, "user_id": user_id}).execute()
@@ -258,6 +292,7 @@ def unlike_post(post_id: str, user_id: str = Depends(require_auth)):
 @router.post("/{post_id}/repost")
 def repost(post_id: str, user_id: str = Depends(require_auth)):
     """Repost a post"""
+    ensure_user_exists(user_id)
     try:
         supabase.table("reposts").insert({"post_id": post_id, "user_id": user_id}).execute()
         
@@ -286,6 +321,7 @@ def unrepost(post_id: str, user_id: str = Depends(require_auth)):
 @router.post("/{post_id}/save")
 def save_post(post_id: str, user_id: str = Depends(require_auth)):
     """Save a post"""
+    ensure_user_exists(user_id)
     try:
         supabase.table("saved_posts").insert({"post_id": post_id, "user_id": user_id}).execute()
         return {"message": "Post saved"}
@@ -354,6 +390,7 @@ def get_comments(
 @router.post("/{post_id}/comments")
 def create_comment(post_id: str, payload: CommentCreate, user_id: str = Depends(require_auth)):
     """Add a comment to a post"""
+    ensure_user_exists(user_id)
     try:
         comment_data = {
             "post_id": post_id,

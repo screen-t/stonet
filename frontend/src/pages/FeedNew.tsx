@@ -37,9 +37,32 @@ const FeedNew = () => {
   // Fetch feed based on active tab
   const { data: feedData, isLoading, error, refetch } = useQuery<Post[]>({
     queryKey: ['feed', activeTab],
-    queryFn: () => backendApi.posts.getFeed(activeTab as 'for_you' | 'following', 50, 0),
+    queryFn: async () => {
+      const result = await backendApi.posts.getFeed(activeTab as 'for_you' | 'following', 50, 0);
+      return result as Post[];
+    },
     refetchInterval: 60000, // Refetch every minute
   });
+
+  const handleCreatePost = async (data: {
+    content: string;
+    visibility: string;
+    image?: string;
+  }) => {
+    try {
+      await backendApi.posts.createPost({
+        content: data.content,
+        visibility: data.visibility,
+        media: data.image ? [{ url: data.image, media_type: "image" }] : undefined,
+      });
+      // Refetch feed to show new post
+      queryClient.invalidateQueries({ queryKey: ['feed'] });
+      setIsCreateModalOpen(false);
+    } catch (error) {
+      console.error('Failed to create post:', error);
+      alert('Failed to create post. Please try again.');
+    }
+  };
 
   // Transform backend posts to PostData format
   const posts: PostData[] = (feedData || []).map((post: any) => {
@@ -181,6 +204,7 @@ const FeedNew = () => {
       <CreatePostModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreatePost}
       />
     </AppLayout>
   );

@@ -232,7 +232,7 @@ const Onboarding = () => {
                   onClick={handleSkip}
                   className="gap-2"
                 >
-                  <Skip Forward className="h-4 w-4" />
+                  <SkipForward className="h-4 w-4" />
                   Skip & Complete
                 </Button>
               )}

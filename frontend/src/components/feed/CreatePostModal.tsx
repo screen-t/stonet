@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/lib/auth";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,7 +36,6 @@ import {
   Link as LinkIcon,
   Globe,
   Users,
-  Lock,
   X,
   Smile,
   Hash,
@@ -68,6 +68,7 @@ export const CreatePostModal = ({
   onClose,
   onSubmit,
 }: CreatePostModalProps) => {
+  const { user } = useAuth();
   const [content, setContent] = useState("");
   const [visibility, setVisibility] = useState("public");
   const [image, setImage] = useState<string | null>(null);
@@ -175,12 +176,12 @@ export const CreatePostModal = ({
           {/* Author Info */}
           <div className="flex items-center gap-3">
             <UserAvatar
-              name="John Doe"
-              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100"
+              name={user ? `${user.first_name} ${user.last_name}`.trim() : "User"}
+              src={user?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.username || 'user'}`}
               size="md"
             />
             <div>
-              <p className="font-semibold">John Doe</p>
+              <p className="font-semibold">{user ? `${user.first_name} ${user.last_name}`.trim() : "User"}</p>
               <Select value={visibility} onValueChange={setVisibility}>
                 <SelectTrigger className="h-7 w-auto gap-2 text-xs">
                   <SelectValue />
@@ -196,12 +197,6 @@ export const CreatePostModal = ({
                     <div className="flex items-center gap-2">
                       <Users className="h-3 w-3" />
                       Connections
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="private">
-                    <div className="flex items-center gap-2">
-                      <Lock className="h-3 w-3" />
-                      Only me
                     </div>
                   </SelectItem>
                 </SelectContent>

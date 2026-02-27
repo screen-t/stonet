@@ -71,26 +71,29 @@ export const authApi = {
     }
   },
   signup: async (data: any) => {
-    const { data: authData, error } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        data: {
-          full_name: data.full_name || `${data.first_name || ''} ${data.last_name || ''}`.trim(),
-          first_name: data.first_name,
-          last_name: data.last_name,
-          username: data.username
-        }
-      }
+    // Call the backend signup endpoint which creates both the auth user
+    // AND the users table row (prevents FK constraint errors on post creation)
+    const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: data.email,
+        password: data.password,
+        username: data.username || data.email.split('@')[0],
+        first_name: data.first_name || '',
+        last_name: data.last_name || '',
+      })
     })
-    
-    if (error) {
-      throw new Error(error.message)
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ detail: 'Signup failed' }))
+      throw new Error(err.detail || 'Signup failed')
     }
-    
+
+    const result = await response.json()
     return {
-      user: authData.user,
-      session: authData.session
+      user: result.user,
+      session: result.session
     }
   },
   logout: async (data?: { refresh_token?: string }) => {
@@ -131,18 +134,18 @@ export const authApi = {
     return data
   },
   checkUsername: async (username: string) => {
-    // Query the profiles table to check if username exists
+    // Query the users table to check if username exists
     const { data, error } = await supabase
-      .from('profiles')
+      .from('users')
       .select('username')
       .eq('username', username)
       .single()
     
-    if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned" which is good
+    if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned" which means available
       throw new Error('Failed to check username availability')
     }
     
-    // If data exists, username is taken. If no data, username is available
+    // If data exists, username is taken. If no data (PGRST116), username is available
     return { 
       available: !data,
       username: username

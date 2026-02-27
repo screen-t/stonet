@@ -1,23 +1,13 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { useNavigate, Navigate, useLocation } from 'react-router-dom'
 import { authApi } from './api'
 import { User } from '@/types/api'
+import { AuthContext, AuthContextValue } from './auth-context'
 
 type Session = {
   access_token?: string
   refresh_token?: string
 }
-
-type AuthContextValue = {
-  user: User | null
-  loading: boolean
-  login: (email: string, password: string) => Promise<void>
-  signup: (payload: any) => Promise<void>
-  logout: () => Promise<void>
-  refreshSession: () => Promise<void>
-}
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 const ACCESS_TOKEN_KEY = 'access_token'
 const REFRESH_TOKEN_KEY = 'refresh_token'
