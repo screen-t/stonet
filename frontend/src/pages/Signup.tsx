@@ -187,10 +187,7 @@ const Signup = () => {
         >
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 mb-8">
-            <div className="h-10 w-10 rounded-xl bg-gradient-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-xl">N</span>
-            </div>
-            <span className="font-bold text-2xl">Nexus</span>
+            <img src="/logo.png" alt="Stonet" className="h-10" />
           </Link>
 
           <h1 className="text-3xl font-bold mb-2">Create your account</h1>

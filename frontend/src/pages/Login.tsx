@@ -112,12 +112,7 @@ const handleLinkedinLogin = async (): Promise<void> => {
         >
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 mb-8">
-            <div className="h-10 w-10 rounded-xl bg-gradient-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">stonet</span>
-            </div>
-            <div>
-              <span className="font-bold text-2xl">stonet</span>
-            </div>
+            <img src="/logo.png" alt="Stonet" className="h-10" />
           </Link>
 
           <h1 className="text-3xl font-bold mb-2">Welcome back</h1>

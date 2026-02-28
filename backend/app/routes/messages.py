@@ -62,7 +62,7 @@ def enrich_conversation(conv: dict, user_id: str):
         print(f"Error enriching conversation: {e}")
         return conv
 
-@router.post("/")
+@router.post("")
 def send_message(payload: MessageCreate, user_id: str = Depends(require_auth)):
     """Send a new message (creates conversation if needed)"""
     try:
@@ -237,8 +237,10 @@ def get_unread_count(user_id: str = Depends(require_auth)):
         unread = supabase.table("messages").select("id", count="exact").in_("conversation_id", conversation_ids).eq("is_read", False).neq("sender_id", user_id).execute()
         
         return {"count": unread.count if unread.count else 0}
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=503, detail="Service temporarily unavailable")
 
 @router.delete("/conversations/{conversation_id}")
 def delete_conversation(conversation_id: str, user_id: str = Depends(require_auth)):

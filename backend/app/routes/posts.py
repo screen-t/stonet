@@ -143,7 +143,7 @@ def create_post(payload: PostCreate, user_id: str = Depends(require_auth)):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.get("/", response_model=List[PostResponse])
+@router.get("", response_model=List[PostResponse])
 def get_feed(
     user_id: str = Depends(require_auth),
     feed_type: str = Query("for_you", pattern="^(for_you|following)$"),

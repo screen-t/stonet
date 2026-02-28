@@ -38,26 +38,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Attempt to restore session
     (async () => {
       const tokens = getStoredTokens()
-      if (tokens.access_token) {
+      if (tokens.access_token && tokens.refresh_token) {
         try {
-          const me = await authApi.me(tokens.access_token)
+          // Use setSession so the Supabase client has full session context
+          // (required for refreshSession to work later)
+          const { supabase } = await import('./supabase')
+          const { data, error } = await supabase.auth.setSession({
+            access_token: tokens.access_token,
+            refresh_token: tokens.refresh_token,
+          })
+          if (error || !data.session) throw error
+          // Persist the (possibly refreshed) tokens
+          setStoredTokens(data.session)
+          const me = await authApi.me(data.session.access_token)
           setUser(me)
-        } catch (err) {
-          // try refresh
-          if (tokens.refresh_token) {
-            try {
-              const res = await authApi.refresh({ refresh_token: tokens.refresh_token })
-              setStoredTokens(res.session)
-              const me2 = await authApi.me(res.session.access_token)
-              setUser(me2)
-            } catch (e) {
-              setStoredTokens(undefined)
-              setUser(null)
-            }
-          } else {
-            setStoredTokens(undefined)
-            setUser(null)
-          }
+        } catch (e) {
+          setStoredTokens(undefined)
+          setUser(null)
         }
       }
       setLoading(false)

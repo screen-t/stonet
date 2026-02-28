@@ -6,7 +6,7 @@ from typing import List
 
 router = APIRouter(prefix="/connections", tags=["Connections"])
 
-def enrich_connection(conn: dict):
+def enrich_connection(conn: dict, current_user_id: str = None):
     """Enrich connection with user info"""
     try:
         # Get requester info
@@ -16,13 +16,19 @@ def enrich_connection(conn: dict):
         # Get receiver info
         receiver = supabase.table("users").select("id, username, first_name, last_name, avatar_url, headline, current_position, current_company").eq("id", conn["receiver_id"]).single().execute()
         conn["receiver"] = receiver.data if receiver.data else None
+
+        # Set "user" to the other person (not the current user)
+        if current_user_id:
+            conn["user"] = conn["receiver"] if conn["requester_id"] == current_user_id else conn["requester"]
+        else:
+            conn["user"] = conn["requester"]
         
         return conn
     except Exception as e:
         print(f"Error enriching connection: {e}")
         return conn
 
-@router.post("/")
+@router.post("")
 def send_connection_request(payload: ConnectionRequest, user_id: str = Depends(require_auth)):
     """Send a connection request"""
     try:
@@ -52,7 +58,7 @@ def send_connection_request(payload: ConnectionRequest, user_id: str = Depends(r
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.get("/", response_model=List[ConnectionResponse])
+@router.get("", response_model=List[ConnectionResponse])
 def get_connections(
     user_id: str = Depends(require_auth),
     status: str = Query("accepted", pattern="^(pending|accepted|declined|blocked)$"),
@@ -66,7 +72,7 @@ def get_connections(
             f"requester_id.eq.{user_id},receiver_id.eq.{user_id}"
         ).eq("status", status).order("created_at", desc=True).range(offset, offset + limit - 1).execute()
         
-        enriched = [enrich_connection(conn) for conn in connections.data]
+        enriched = [enrich_connection(conn, user_id) for conn in connections.data]
         return enriched
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -77,7 +83,7 @@ def get_connection_requests(user_id: str = Depends(require_auth)):
     try:
         requests = supabase.table("connections").select("*").eq("receiver_id", user_id).eq("status", "pending").order("created_at", desc=True).execute()
         
-        enriched = [enrich_connection(req) for req in requests.data]
+        enriched = [enrich_connection(req, user_id) for req in requests.data]
         return enriched
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

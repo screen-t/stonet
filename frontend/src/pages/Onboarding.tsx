@@ -57,10 +57,7 @@ const Onboarding = () => {
           {/* Header */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 mb-4">
-              <div className="h-10 w-10 rounded-lg bg-gradient-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">stonet</span>
-              </div>
-              <span className="font-bold text-2xl">stonet</span>
+              <img src="/logo.png" alt="Stonet" className="h-10" />
             </div>
             <h1 className="text-3xl font-bold mb-2">Welcome to stonet</h1>
             <p className="text-muted-foreground">

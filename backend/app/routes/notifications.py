@@ -33,8 +33,10 @@ def get_unread_count(user_id: str = Depends(require_auth)):
         count = supabase.table("notifications").select("id", count="exact").eq("user_id", user_id).eq("is_read", False).execute()
         
         return {"count": count.count if count.count else 0}
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=503, detail="Service temporarily unavailable")
 
 @router.put("/{notification_id}/read")
 def mark_notification_as_read(notification_id: str, user_id: str = Depends(require_auth)):

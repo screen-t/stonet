@@ -78,10 +78,7 @@ export const Navbar = ({ isAuthenticated = false }: NavbarProps) => {
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo */}
           <Link to={isAuthenticated ? "/feed" : "/"} className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">stonet</span>
-            </div>
-            <span className="font-bold text-xl hidden sm:block">stonet</span>
+            <img src="/logo.png" alt="Stonet" className="h-8" />
           </Link>
 
           {/* Search Bar - Desktop */}
@@ -203,6 +200,19 @@ export const Navbar = ({ isAuthenticated = false }: NavbarProps) => {
             <div className="container mx-auto px-4 py-4 space-y-4">
               {isAuthenticated ? (
                 <>
+                  {/* User info */}
+                  <div className="flex items-center gap-3 pb-2 border-b border-border">
+                    <UserAvatar
+                      name={`${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.email || "User"}
+                      src={user?.avatar_url}
+                      size="sm"
+                    />
+                    <div>
+                      <p className="font-semibold text-sm">{user?.first_name} {user?.last_name}</p>
+                      <p className="text-xs text-muted-foreground">@{user?.username}</p>
+                    </div>
+                  </div>
+
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -259,6 +269,15 @@ export const Navbar = ({ isAuthenticated = false }: NavbarProps) => {
                   >
                     <PlusCircle className="h-4 w-4" />
                     Create Post
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+                    onClick={() => { setIsMobileMenuOpen(false); handleLogout(); }}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Log out
                   </Button>
                 </>
               ) : (

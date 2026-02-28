@@ -203,7 +203,7 @@ const NetworkNew = () => {
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => removeMutation.mutate(connection.user?.id)}
+                              onClick={() => removeMutation.mutate(connection.id)}
                             >
                               Remove
                             </Button>

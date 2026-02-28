@@ -48,7 +48,7 @@ const testimonials = [
     role: "CEO at TechVentures",
     avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
     content:
-      "Nexus transformed how we connect with partners. We've closed 3 major deals in just 2 months!",
+      "Stonet transformed how we connect with partners. We've closed 3 major deals in just 2 months!",
   },
   {
     name: "Marcus Johnson",
@@ -312,7 +312,7 @@ const Landing = () => {
               </h2>
               <p className="text-primary-foreground/80 text-lg mb-8 max-w-xl mx-auto">
                 Join thousands of professionals already building valuable
-                connections on Nexus.
+                connections on Stonet.
               </p>
               <Button
                 size="xl"
@@ -334,12 +334,7 @@ const Landing = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">
-                  N
-                </span>
-              </div>
-              <span className="font-bold text-xl">Nexus</span>
+              <img src="/logo.png" alt="Stonet" className="h-8" />
             </div>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
               <Link to="#" className="hover:text-foreground transition-colors">
@@ -356,7 +351,7 @@ const Landing = () => {
               </Link>
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2024 Nexus. All rights reserved.
+              © 2026 Stonet. All rights reserved.
             </p>
           </div>
         </div>
