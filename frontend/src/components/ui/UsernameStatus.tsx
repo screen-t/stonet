@@ -5,6 +5,7 @@ interface UsernameStatusProps {
   isAvailable: boolean | null
   error: string | null
   username: string
+  isLoading:Boolean
 }
 
 export const UsernameStatus = ({ isChecking, isAvailable, error, username }: UsernameStatusProps) => {
