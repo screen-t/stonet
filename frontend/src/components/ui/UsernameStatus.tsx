@@ -5,10 +5,15 @@ interface UsernameStatusProps {
   isAvailable: boolean | null
   error: string | null
   username: string
-  isLoading:Boolean
 }
 
-export const UsernameStatus = ({ isChecking, isAvailable, error, username }: UsernameStatusProps) => {
+export const UsernameStatus = ({
+  isChecking,
+  isAvailable,
+  error,
+  username,
+}: UsernameStatusProps) => {
+  // Handle the case where username is too short
   if (!username || username.length < 3) {
     return (
       <p className="text-xs text-muted-foreground">
@@ -17,6 +22,7 @@ export const UsernameStatus = ({ isChecking, isAvailable, error, username }: Use
     )
   }
 
+  // Handle the checking state
   if (isChecking) {
     return (
       <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -26,6 +32,7 @@ export const UsernameStatus = ({ isChecking, isAvailable, error, username }: Use
     )
   }
 
+  // Handle errors
   if (error) {
     return (
       <div className="flex items-center gap-1 text-xs text-orange-600">
@@ -35,6 +42,7 @@ export const UsernameStatus = ({ isChecking, isAvailable, error, username }: Use
     )
   }
 
+  // Handle availability when true
   if (isAvailable === true) {
     return (
       <div className="flex items-center gap-1 text-xs text-green-600">
@@ -44,6 +52,7 @@ export const UsernameStatus = ({ isChecking, isAvailable, error, username }: Use
     )
   }
 
+  // Handle availability when false
   if (isAvailable === false) {
     return (
       <div className="flex items-center gap-1 text-xs text-red-600">
@@ -53,5 +62,6 @@ export const UsernameStatus = ({ isChecking, isAvailable, error, username }: Use
     )
   }
 
+  // Fallback if none of the conditions match
   return null
 }

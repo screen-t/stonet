@@ -3,7 +3,7 @@
  * All requests use the stored access token (localStorage) for auth.
  */
 import type { Profile, Education, EducationFormData, } from "@/types/api"
-import type { Comment as ApiComment, Post } from "@/types/api";
+import type { Comment as ApiComment, Post ,PostsResponse ,Skill ,WorkExperience,WorkExperienceFormData} from "@/types/api";
 
 
 export interface Comment {
@@ -60,7 +60,55 @@ async function tryRefreshToken(): Promise<string | null> {
 
 export const backendApi = {
   profile: {
+     async addWorkExperience(data: WorkExperienceFormData): Promise<WorkExperience> {
+      const res = await fetchWithAuth("/profile/work-experience", {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+      });
 
+      return handleResponse<WorkExperience>(res);
+    },
+
+    // Update work experience
+    async updateWorkExperience(id: string, data: WorkExperienceFormData): Promise<WorkExperience> {
+      const res = await fetchWithAuth(`/profile/work-experience/${id}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+      });
+
+      return handleResponse<WorkExperience>(res);
+    },
+
+    // Delete work experience
+    async deleteWorkExperience(id: string): Promise<void> {
+      const res = await fetchWithAuth(`/profile/work-experience/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
+
+      return handleResponse<void>(res);
+    },
+    async deleteSkill(userId: string, skillId: string): Promise<void> {
+      const res = await fetchWithAuth(`/profile/${userId}/skills/${skillId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      
+      return handleResponse<void>(res);  // Assuming handleResponse is a helper that handles the response
+    },
+    
+    async addSkill(userId: string, skillData: { name: string }) {
+      const res = await fetchWithAuth(`/users/${userId}/skills`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(skillData),
+      });
+
+      // Handle response and return it
+      return handleResponse<Skill>(res);
+    },
     async getComments(postId: string, limit = 10, offset = 0): Promise<{ comments: Comment[] }> {
       const res = await fetchWithAuth(`/posts/${postId}/comments?limit=${limit}&offset=${offset}`, {
         headers: getAuthHeaders(),
@@ -114,6 +162,12 @@ export const backendApi = {
 
   // ---------- ADD POSTS API ----------
   posts: {
+
+    
+     async getUserPosts(userId: string, limit: number, offset: number): Promise<PostsResponse> {
+      const res = await fetchWithAuth(`/posts/user/${userId}?limit=${limit}&offset=${offset}`);
+      return handleResponse<PostsResponse>(res);
+    },
         async createPost(data: {
       content: string;
       post_type?: "text" | "image" | "video" | "poll";
