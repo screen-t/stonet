@@ -2,6 +2,22 @@
  * Client for the Stonet FastAPI backend.
  * All requests use the stored access token (localStorage) for auth.
  */
+import type { Profile, Education, EducationFormData, } from "@/types/api"
+import type { Comment as ApiComment, Post } from "@/types/api";
+
+
+export interface Comment {
+  id: number;
+  content: string;
+  created_at: string;
+  author: {
+    id: number;
+    first_name: string;
+    last_name: string;
+    avatar_url?: string;
+  };
+}
+
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 
@@ -41,6 +57,157 @@ async function tryRefreshToken(): Promise<string | null> {
  * token on 401 and retries the original request once.
  * On a second 401 (refresh failed), clears tokens and redirects to /login.
  */
+
+export const backendApi = {
+  profile: {
+
+    async getComments(postId: string, limit = 10, offset = 0): Promise<{ comments: Comment[] }> {
+      const res = await fetchWithAuth(`/posts/${postId}/comments?limit=${limit}&offset=${offset}`, {
+        headers: getAuthHeaders(),
+      });
+      return handleResponse<{ comments: Comment[] }>(res); // now returns the correct Comment type
+    },
+    async addComment(postId: string, content: string): Promise<Comment> {
+      const res = await fetchWithAuth(`/posts/${postId}/comments`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ content }),
+      });
+      return handleResponse<Comment>(res); // again uses correct Comment type
+    },
+    async getMyProfile(): Promise<Profile> {
+      const res = await fetchWithAuth("/profile/me", { headers: getAuthHeaders() });
+      return handleResponse<Profile>(res);
+    },
+
+    async getProfile(username: string): Promise<Profile> {
+      const res = await fetchWithAuth(`/profile/${encodeURIComponent(username)}`, { headers: getAuthHeaders() });
+      return handleResponse<Profile>(res);
+    },
+
+    async addEducation(data: EducationFormData): Promise<Education> {
+      const res = await fetchWithAuth("/profile/education", {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+      });
+      return handleResponse<Education>(res);
+    },
+
+    async updateEducation(id: string, data: EducationFormData): Promise<Education> {
+      const res = await fetchWithAuth(`/profile/education/${id}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+      });
+      return handleResponse<Education>(res);
+    },
+
+    async deleteEducation(id: string): Promise<void> {
+      const res = await fetchWithAuth(`/profile/education/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
+      return handleResponse<void>(res);
+    },
+  },
+
+  // ---------- ADD POSTS API ----------
+  posts: {
+        async createPost(data: {
+      content: string;
+      post_type?: "text" | "image" | "video" | "poll";
+      visibility?: "public" | "connections" | "private";
+      media?: Array<{ url: string; media_type: "image" | "video"; thumbnail_url?: string | null }>;
+      poll?: {
+        question: string;
+        options: Array<{ option_text: string; display_order: number }>;
+        ends_at?: string;
+      };
+      scheduled_at?: string;
+      is_draft?: boolean;
+    }): Promise<Post> {
+      const res = await fetch("/posts", {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+      });
+      return handleResponse<Post>(res);
+    },
+
+    async getComments(postId: string, limit = 10, offset = 0): Promise<{ comments: ApiComment[] }> {
+      const res = await fetch(`/posts/${postId}/comments?limit=${limit}&offset=${offset}`, {
+        headers: getAuthHeaders(),
+      });
+      const data = await res.json();
+
+      // transform backend data to match ApiComment interface
+      const comments: ApiComment[] = data.comments.map((c: any) => ({
+        id: c.id,
+        post_id: postId,
+        user_id: c.author?.id || "",
+        content: c.content,
+        created_at: c.created_at,
+        updated_at: c.updated_at || c.created_at,
+        author: c.author ? {
+          id: c.author.id,
+          email: c.author.email,
+          username: c.author.username,
+          first_name: c.author.first_name,
+          last_name: c.author.last_name,
+          avatar_url: c.author.avatar_url,
+        } : undefined,
+      }));
+
+      return { comments };
+    },
+    async likePost(postId: string): Promise<void> {
+      const res = await fetchWithAuth(`/posts/${postId}/like`, { method: "POST", headers: getAuthHeaders() });
+      return handleResponse<void>(res);
+    },
+
+    async unlikePost(postId: string): Promise<void> {
+      const res = await fetchWithAuth(`/posts/${postId}/unlike`, { method: "POST", headers: getAuthHeaders() });
+      return handleResponse<void>(res);
+    },
+
+    async addComment(postId: string, content: string): Promise<Comment> {
+      const res = await fetchWithAuth(`/posts/${postId}/comments`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ content }),
+      });
+      return handleResponse<Comment>(res);
+    },
+
+
+    async repost(postId: string, comment?: string): Promise<void> {
+      const res = await fetchWithAuth(`/posts/${postId}/repost`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ comment }),
+      });
+      return handleResponse<void>(res);
+    },
+
+    async unrepost(postId: string): Promise<void> {
+      const res = await fetchWithAuth(`/posts/${postId}/unrepost`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+      });
+      return handleResponse<void>(res);
+    },
+
+    async votePoll(postId: string, optionId: string): Promise<void> {
+      const res = await fetchWithAuth(`/posts/${postId}/vote`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ option_id: optionId }),
+      });
+      return handleResponse<void>(res);
+    },
+  },
+};
 async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
   const res = await fetch(url, options);
   if (res.status !== 401) return res;
@@ -69,21 +236,32 @@ async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Re
   });
 }
 
-async function handleResponse<T>(res: Response): Promise<T> {
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(typeof err.detail === "string" ? err.detail : JSON.stringify(err.detail));
+// async function handleResponse<T>(res: Response): Promise<T> {
+//   if (!res.ok) {
+//     const err = await res.json().catch(() => ({ detail: res.statusText }));
+//     throw new Error(typeof err.detail === "string" ? err.detail : JSON.stringify(err.detail));
+//   }
+//   const text = await res.text();
+//   return text ? JSON.parse(text) : ({} as T);
+// }
+
+
+export async function handleResponse<T>(response: Response): Promise<T> {
+  if (!response.ok) {
+    throw new Error("Request failed")
   }
-  const text = await res.text();
-  return text ? JSON.parse(text) : ({} as T);
+
+  return response.json() as Promise<T>
 }
 
 // --- Profile ---
-const profile = {
-  getMyProfile: () =>
-    fetchWithAuth(`${API_BASE_URL}/profile/me`, { headers: getAuthHeaders() }).then(handleResponse),
-  getProfile: (username: string) =>
-    fetchWithAuth(`${API_BASE_URL}/profile/${encodeURIComponent(username)}`, { headers: getAuthHeaders() }).then(handleResponse),
+export const profile = {
+
+  getProfile: (username: string): Promise<Profile> =>
+    fetchWithAuth(
+      `${API_BASE_URL}/profile/${encodeURIComponent(username)}`,
+      { headers: getAuthHeaders() }
+    ).then(res => handleResponse<Profile>(res)),
   updateProfile: (data: Record<string, unknown>) =>
     fetchWithAuth(`${API_BASE_URL}/profile/me`, {
       method: "PUT",
@@ -196,11 +374,21 @@ const posts = {
       method: "DELETE",
       headers: getAuthHeaders(),
     }).then(handleResponse),
-  getComments: (postId: string, limit: number, offset: number) =>
+  // getComments: (postId: string, limit: number, offset: number) =>
+  //   fetchWithAuth(
+  //     `${API_BASE_URL}/posts/${postId}/comments?limit=${limit}&offset=${offset}`,
+  //     { headers: getAuthHeaders() }
+  //   ).then(handleResponse<unknown[]>),
+
+  getComments: (
+    postId: string,
+    limit: number,
+    offset: number
+  ): Promise<{ comments: Comment[] }> =>
     fetchWithAuth(
       `${API_BASE_URL}/posts/${postId}/comments?limit=${limit}&offset=${offset}`,
       { headers: getAuthHeaders() }
-    ).then(handleResponse<unknown[]>),
+    ).then(handleResponse<{ comments: Comment[] }>),
   votePoll: (postId: string, optionId: string) =>
     fetchWithAuth(`${API_BASE_URL}/posts/${postId}/poll/vote`, {
       method: "POST",
@@ -350,11 +538,3 @@ const search = {
   },
 };
 
-export const backendApi = {
-  profile,
-  posts,
-  connections,
-  messages,
-  notifications,
-  search,
-};
