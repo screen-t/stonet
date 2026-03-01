@@ -3,7 +3,9 @@
  * All requests use the stored access token (localStorage) for auth.
  */
 import type { Profile, Education, EducationFormData, } from "@/types/api"
-import type { Comment as ApiComment, Post ,PostsResponse ,Skill ,WorkExperience,WorkExperienceFormData} from "@/types/api";
+import type { Comment as ApiComment, Post, PostsResponse, Skill, WorkExperience, WorkExperienceFormData } from "@/types/api";
+import axios from "axios";
+import { User } from "@/types/api";
 
 
 export interface Comment {
@@ -17,6 +19,42 @@ export interface Comment {
     avatar_url?: string;
   };
 }
+
+export type Conversation = {
+  id: string;
+  user: User;          // match frontend type
+  unread_count: number; // match frontend type
+  lastMessage: string;
+};
+
+// export type Conversation = {
+//   id: string;
+//   participants: { id: string; name: string }[];
+//   lastMessage: string;
+//   unreadCount: number;
+// };
+
+// export type Message = {
+//   id: string;
+//   senderId: string;
+//   recipientId: string;
+//   content: string;
+//   timestamp: string;
+//   read: boolean;
+// };
+
+type Message = {
+  id: string;
+  sender_id: string;
+  recipient_id: string;
+  content: string;
+  is_read: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ConversationsResponse = { conversations: Conversation[] };
+export type MessagesResponse = { messages: Message[] };
 
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
@@ -60,7 +98,7 @@ async function tryRefreshToken(): Promise<string | null> {
 
 export const backendApi = {
   profile: {
-     async addWorkExperience(data: WorkExperienceFormData): Promise<WorkExperience> {
+    async addWorkExperience(data: WorkExperienceFormData): Promise<WorkExperience> {
       const res = await fetchWithAuth("/profile/work-experience", {
         method: "POST",
         headers: getAuthHeaders(),
@@ -95,10 +133,10 @@ export const backendApi = {
         method: 'DELETE',
         headers: getAuthHeaders(),
       });
-      
+
       return handleResponse<void>(res);  // Assuming handleResponse is a helper that handles the response
     },
-    
+
     async addSkill(userId: string, skillData: { name: string }) {
       const res = await fetchWithAuth(`/users/${userId}/skills`, {
         method: 'POST',
@@ -159,16 +197,57 @@ export const backendApi = {
       return handleResponse<void>(res);
     },
   },
+  //------------Messeges---------------
+
+  messages: {
+    // Get list of conversations
+    getConversations: async (limit: number, offset: number): Promise<ConversationsResponse> => {
+      const res = await axios.get(`${API_BASE_URL}/conversations?limit=${limit}&offset=${offset}`);
+
+      // Map API response to your frontend type
+      const conversations: ConversationsResponse['conversations'] = res.data.map((c: any) => ({
+        id: c.id,
+        user: c.participants[0],      // pick the main user or however you define it
+        unread_count: c.unreadCount,  // map API field to TS type
+        lastMessage: c.lastMessage,
+      }));
+
+      return { conversations };
+    },
+
+    // Get messages for a conversation/user
+    getMessages: async (userId: string, limit: number, offset: number): Promise<MessagesResponse> => {
+      const res = await axios.get(`${API_BASE_URL}/messages/${userId}?limit=${limit}&offset=${offset}`);
+      return res.data;
+    },
+
+    // Get unread messages count
+    getUnreadCount: async (): Promise<{ unreadCount: number }> => {
+      const res = await axios.get(`${API_BASE_URL}/messages/unread-count`);
+      return res.data;
+    },
+
+    // Send a message
+    sendMessage: async (recipientId: string, content: string): Promise<Message> => {
+      const res = await axios.post(`${API_BASE_URL}/messages/send`, { recipientId, content });
+      return res.data;
+    },
+
+    // Mark a message as read
+    markAsRead: async (messageId: string): Promise<void> => {
+      await axios.post(`${API_BASE_URL}/messages/${messageId}/mark-read`);
+    },
+  },
 
   // ---------- ADD POSTS API ----------
   posts: {
 
-    
-     async getUserPosts(userId: string, limit: number, offset: number): Promise<PostsResponse> {
+
+    async getUserPosts(userId: string, limit: number, offset: number): Promise<PostsResponse> {
       const res = await fetchWithAuth(`/posts/user/${userId}?limit=${limit}&offset=${offset}`);
       return handleResponse<PostsResponse>(res);
     },
-        async createPost(data: {
+    async createPost(data: {
       content: string;
       post_type?: "text" | "image" | "video" | "poll";
       visibility?: "public" | "connections" | "private";
