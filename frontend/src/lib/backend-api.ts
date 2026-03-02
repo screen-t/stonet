@@ -536,9 +536,13 @@ const connections = {
     fetchWithAuth(
       `${API_BASE_URL}/connections?status=${status}&limit=${limit}&offset=${offset}`,
       { headers: getAuthHeaders() }
-    ).then(handleResponse<unknown[]>),
-  getConnectionStatus: (username: string) =>
-    fetchWithAuth(`${API_BASE_URL}/connections/check/${encodeURIComponent(username)}`, {
+    ).then(async (res) => {
+      const data = await handleResponse<unknown[]>(res);
+      const list: any[] = Array.isArray(data) ? data : [];
+      return { connections: list };
+    }) as Promise<import('@/types/api').ConnectionsResponse>,
+  getConnectionStatus: (userId: string) =>
+    fetchWithAuth(`${API_BASE_URL}/connections/check/by-id/${encodeURIComponent(userId)}`, {
       headers: getAuthHeaders(),
     }).then(handleResponse<{ status: string; connection_id?: string; is_requester?: boolean; can_connect?: boolean }>),
   sendRequest: (receiverId: string) =>
@@ -562,10 +566,10 @@ const connections = {
     fetchWithAuth(`${API_BASE_URL}/connections/suggestions?limit=${limit}`, {
       headers: getAuthHeaders(),
     }).then(async (res) => {
-      const data = await handleResponse<{ suggestions: unknown[] }>(res);
-      const suggestions = Array.isArray(data) ? data : (data.suggestions ?? []);
+      const data = await handleResponse<any>(res);
+      const suggestions: import('@/types/api').User[] = Array.isArray(data) ? data : (data?.suggestions ?? []);
       return { suggestions };
-    }),
+    }) as Promise<import('@/types/api').SuggestionsResponse>,
 };
 
 // --- Messages ---
@@ -584,17 +588,17 @@ const messages = {
   getConversations: async (_limit?: number, _offset?: number) => {
     const list = await fetchWithAuth(`${API_BASE_URL}/messages/conversations`, {
       headers: getAuthHeaders(),
-    }).then(handleResponse<unknown[]>);
-    return { conversations: Array.isArray(list) ? list : [] };
+    }).then(handleResponse<any[]>);
+    return { conversations: Array.isArray(list) ? list : [] } as import('@/types/api').ConversationsResponse;
   },
   getMessages: async (otherUserId: string, limit: number, offset: number) => {
     const conv = await getConversationWithUser(otherUserId);
-    if (!conv) return { messages: [] };
+    if (!conv) return { messages: [] } as import('@/types/api').MessagesResponse;
     const list = await fetchWithAuth(
       `${API_BASE_URL}/messages/conversations/${conv.id}/messages?limit=${limit}&offset=${offset}`,
       { headers: getAuthHeaders() }
-    ).then(handleResponse<unknown[]>);
-    return { messages: Array.isArray(list) ? list : [] };
+    ).then(handleResponse<any[]>);
+    return { messages: Array.isArray(list) ? list : [] } as import('@/types/api').MessagesResponse;
   },
   sendMessage: (recipientId: string, content: string) =>
     fetchWithAuth(`${API_BASE_URL}/messages`, {
@@ -607,6 +611,14 @@ const messages = {
       method: "PUT",
       headers: getAuthHeaders(),
     }).then(handleResponse),
+  markConversationAsRead: async (otherUserId: string) => {
+    const conv = await getConversationWithUser(otherUserId);
+    if (!conv) return;
+    return fetchWithAuth(`${API_BASE_URL}/messages/conversations/${conv.id}/read`, {
+      method: "PUT",
+      headers: getAuthHeaders(),
+    }).then(handleResponse);
+  },
   getUnreadCount: () =>
     fetchWithAuth(`${API_BASE_URL}/messages/unread-count`, {
       headers: getAuthHeaders(),

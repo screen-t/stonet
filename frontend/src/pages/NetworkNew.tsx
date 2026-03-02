@@ -10,7 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { backendApi } from "@/lib/backend-api";
 import { useToast } from "@/hooks/use-toast";
-import { ConnectionsResponse, SuggestionsResponse } from '@/types/api';
+import { useAuth } from "@/lib/auth";
+import { Connection, ConnectionsResponse, SuggestionsResponse } from '@/types/api';
 import {
   Search,
   UserPlus,
@@ -26,6 +27,7 @@ import {
 const NetworkNew = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user: currentUser } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("connections");
 
@@ -48,7 +50,16 @@ const NetworkNew = () => {
   });
 
   const connections = connectionsData?.connections || [];
-  const requests = requestsData?.connections || [];
+  const allPendingRequests = requestsData?.connections || [];
+
+  // Split pending requests into received (others sent to me) and sent (I sent to others)
+  const receivedRequests = allPendingRequests.filter(
+    (r: Connection) => r.receiver_id === currentUser?.id
+  );
+  const sentRequests = allPendingRequests.filter(
+    (r: Connection) => r.requester_id === currentUser?.id
+  );
+
   const suggestions = suggestionsData?.suggestions || [];
 
   // Respond to connection request
@@ -137,7 +148,7 @@ const NetworkNew = () => {
             </TabsTrigger>
             <TabsTrigger value="requests" className="flex items-center gap-2">
               <Clock className="w-4 h-4" />
-              Requests ({requests.length})
+              Requests ({allPendingRequests.length})
             </TabsTrigger>
             <TabsTrigger value="suggestions" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
@@ -223,7 +234,7 @@ const NetworkNew = () => {
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
-            ) : requests.length === 0 ? (
+            ) : allPendingRequests.length === 0 ? (
               <div className="text-center py-12">
                 <Clock className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                 <p className="text-lg font-semibold">No pending requests</p>
@@ -232,67 +243,140 @@ const NetworkNew = () => {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {requests.map((request: any, index: number) => (
-                  <motion.div
-                    key={request.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <Card className="p-4">
-                      <div className="flex items-start gap-3">
-                        <Link to={`/profile/${request.user?.id}`}>
-                          <UserAvatar
-                            src={request.user?.avatar_url}
-                            name={`${request.user?.first_name} ${request.user?.last_name}`}
-                            size="md"
-                          />
-                        </Link>
-                        <div className="flex-1 min-w-0">
-                          <Link to={`/profile/${request.user?.id}`}>
-                            <h4 className="font-semibold hover:text-primary truncate">
-                              {request.user?.first_name} {request.user?.last_name}
-                            </h4>
-                          </Link>
-                          {request.user?.username && (
-                            <p className="text-sm text-muted-foreground">
-                              @{request.user.username}
-                            </p>
-                          )}
-                          {request.user?.headline && (
-                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                              {request.user.headline}
-                            </p>
-                          )}
-                          <div className="flex gap-2 mt-3">
-                            <Button
-                              size="sm"
-                              onClick={() =>
-                                respondMutation.mutate({ requestId: request.id, accept: true })
-                              }
-                              disabled={respondMutation.isPending}
-                            >
-                              <Check className="w-4 h-4 mr-2" />
-                              Accept
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() =>
-                                respondMutation.mutate({ requestId: request.id, accept: false })
-                              }
-                              disabled={respondMutation.isPending}
-                            >
-                              <X className="w-4 h-4 mr-2" />
-                              Decline
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  </motion.div>
-                ))}
+              <div className="space-y-8">
+                {/* Received requests */}
+                {receivedRequests.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">
+                      Received ({receivedRequests.length})
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {receivedRequests.map((request: any, index: number) => (
+                        <motion.div
+                          key={request.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                        >
+                          <Card className="p-4">
+                            <div className="flex items-start gap-3">
+                              <Link to={`/profile/${request.user?.id}`}>
+                                <UserAvatar
+                                  src={request.user?.avatar_url}
+                                  name={`${request.user?.first_name} ${request.user?.last_name}`}
+                                  size="md"
+                                />
+                              </Link>
+                              <div className="flex-1 min-w-0">
+                                <Link to={`/profile/${request.user?.id}`}>
+                                  <h4 className="font-semibold hover:text-primary truncate">
+                                    {request.user?.first_name} {request.user?.last_name}
+                                  </h4>
+                                </Link>
+                                {request.user?.username && (
+                                  <p className="text-sm text-muted-foreground">
+                                    @{request.user.username}
+                                  </p>
+                                )}
+                                {request.user?.headline && (
+                                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                                    {request.user.headline}
+                                  </p>
+                                )}
+                                <div className="flex gap-2 mt-3">
+                                  <Button
+                                    size="sm"
+                                    onClick={() =>
+                                      respondMutation.mutate({ requestId: request.id, accept: true })
+                                    }
+                                    disabled={respondMutation.isPending}
+                                  >
+                                    <Check className="w-4 h-4 mr-2" />
+                                    Accept
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() =>
+                                      respondMutation.mutate({ requestId: request.id, accept: false })
+                                    }
+                                    disabled={respondMutation.isPending}
+                                  >
+                                    <X className="w-4 h-4 mr-2" />
+                                    Decline
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Sent requests */}
+                {sentRequests.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">
+                      Sent ({sentRequests.length})
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {sentRequests.map((request: any, index: number) => (
+                        <motion.div
+                          key={request.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                        >
+                          <Card className="p-4">
+                            <div className="flex items-start gap-3">
+                              <Link to={`/profile/${request.user?.id}`}>
+                                <UserAvatar
+                                  src={request.user?.avatar_url}
+                                  name={`${request.user?.first_name} ${request.user?.last_name}`}
+                                  size="md"
+                                />
+                              </Link>
+                              <div className="flex-1 min-w-0">
+                                <Link to={`/profile/${request.user?.id}`}>
+                                  <h4 className="font-semibold hover:text-primary truncate">
+                                    {request.user?.first_name} {request.user?.last_name}
+                                  </h4>
+                                </Link>
+                                {request.user?.username && (
+                                  <p className="text-sm text-muted-foreground">
+                                    @{request.user.username}
+                                  </p>
+                                )}
+                                {request.user?.headline && (
+                                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                                    {request.user.headline}
+                                  </p>
+                                )}
+                                <div className="flex gap-2 mt-3">
+                                  <span className="text-xs text-muted-foreground flex items-center gap-1 mr-2">
+                                    <Clock className="w-3 h-3" />
+                                    Pending
+                                  </span>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => removeMutation.mutate(request.id)}
+                                    disabled={removeMutation.isPending}
+                                  >
+                                    <X className="w-4 h-4 mr-2" />
+                                    Withdraw
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </TabsContent>

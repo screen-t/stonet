@@ -145,14 +145,15 @@ export interface Post {
 // --- Comment ---
 // --- Connection ---
 export interface Connection {
-  id: string
-  user_id: string
-  connected_user_id: string
-  status: 'pending' | 'accepted' | 'rejected'
-  created_at: string
-  updated_at: string
-  user?: User
-  connected_user?: User
+  id: string;
+  requester_id: string;
+  receiver_id: string;
+  status: 'pending' | 'accepted' | 'declined' | 'blocked';
+  created_at: string;
+  updated_at: string;
+  requester?: User;
+  receiver?: User;
+  user?: User; // The other person in the connection
 }
 
 export interface ConnectionStatus {
@@ -174,9 +175,12 @@ export interface Message {
 }
 
 export interface Conversation {
-  user: User
-  last_message?: Message
-  unread_count: number
+  id: string;
+  created_at: string;
+  user?: User;
+  participants?: Partial<User>[];
+  last_message?: Message | null;
+  unread_count: number;
 }
 
 // --- Notification ---
@@ -228,14 +232,50 @@ export interface WorkExperienceFormData {
 
 export interface CreatePostPayload {
   content: string;
-  post_type?: string;
-  visibility?: "public" | "connections" | "private";
-  media?: Array<{ url: string; media_type: string; thumbnail_url?: string | null }>;
-  poll?: {
-    question: string;
-    options: Array<{ option_text: string; display_order: number }>;
-    ends_at?: string;
-  };
-  scheduled_at?: string;
-  is_draft?: boolean;
+  is_read: boolean;
+  actor_id?: string;
+  post_id?: string;
+  comment_id?: string;
+  connection_id?: string;
+  created_at: string;
+  actor?: User;
+}
+
+// API Response wrappers
+export interface PostsResponse {
+  posts: Post[];
+}
+
+export interface CommentsResponse {
+  comments: Comment[];
+}
+
+export interface ConnectionsResponse {
+  connections: Connection[];
+}
+
+export interface SuggestionsResponse {
+  suggestions: User[];
+}
+
+export interface ConversationsResponse {
+  conversations: Conversation[];
+}
+
+export interface MessagesResponse {
+  messages: Message[];
+}
+
+export interface NotificationsResponse {
+  notifications: Notification[];
+  count?: number;
+}
+
+export interface SearchResponse {
+  users?: User[];
+  posts?: Post[];
+}
+
+export interface UnreadCountResponse {
+  count: number;
 }

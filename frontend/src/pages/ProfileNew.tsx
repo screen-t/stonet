@@ -24,9 +24,12 @@ import {
   Edit3,
   MessageSquare,
   UserPlus,
+  UserCheck,
   Loader2,
   Mail,
   Globe,
+  Check,
+  X,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -73,13 +76,26 @@ export const ProfilePage = () => {
   });
 
   const removeConnection = useMutation({
-    mutationFn: () => backendApi.connections.removeConnection(profileUserId!),
+    mutationFn: () => backendApi.connections.removeConnection(connectionStatus?.connection_id || profileUserId!),
     onSuccess: () => {
       toast({ title: "Connection removed" });
       queryClient.invalidateQueries({ queryKey: ['connectionStatus', profileUserId] });
     },
     onError: () => {
       toast({ title: "Failed to remove connection", variant: "destructive" });
+    },
+  });
+
+  const respondToRequest = useMutation({
+    mutationFn: (accept: boolean) =>
+      backendApi.connections.respondToRequest(connectionStatus?.connection_id!, accept),
+    onSuccess: (_, accept) => {
+      toast({ title: accept ? "Connection accepted!" : "Request declined" });
+      queryClient.invalidateQueries({ queryKey: ['connectionStatus', profileUserId] });
+      queryClient.invalidateQueries({ queryKey: ['connections'] });
+    },
+    onError: () => {
+      toast({ title: "Failed to respond to request", variant: "destructive" });
     },
   });
 
@@ -214,7 +230,26 @@ export const ProfilePage = () => {
                               variant="outline"
                               onClick={() => removeConnection.mutate()}
                             >
+                              <UserCheck className="w-4 h-4 mr-2" />
                               Connected
+                            </Button>
+                          </>
+                        ) : connectionStatus?.status === 'pending_from_them' ? (
+                          <>
+                            <Button
+                              onClick={() => respondToRequest.mutate(true)}
+                              disabled={respondToRequest.isPending}
+                            >
+                              <Check className="w-4 h-4 mr-2" />
+                              Accept Request
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => respondToRequest.mutate(false)}
+                              disabled={respondToRequest.isPending}
+                            >
+                              <X className="w-4 h-4 mr-2" />
+                              Decline
                             </Button>
                           </>
                         ) : connectionStatus?.status === 'pending' ? (
