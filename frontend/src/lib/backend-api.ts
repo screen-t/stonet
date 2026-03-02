@@ -215,9 +215,13 @@ const connections = {
     fetchWithAuth(
       `${API_BASE_URL}/connections?status=${status}&limit=${limit}&offset=${offset}`,
       { headers: getAuthHeaders() }
-    ).then(handleResponse<unknown[]>),
-  getConnectionStatus: (username: string) =>
-    fetchWithAuth(`${API_BASE_URL}/connections/check/${encodeURIComponent(username)}`, {
+    ).then(async (res) => {
+      const data = await handleResponse<unknown[]>(res);
+      const list: any[] = Array.isArray(data) ? data : [];
+      return { connections: list };
+    }) as Promise<import('@/types/api').ConnectionsResponse>,
+  getConnectionStatus: (userId: string) =>
+    fetchWithAuth(`${API_BASE_URL}/connections/check/by-id/${encodeURIComponent(userId)}`, {
       headers: getAuthHeaders(),
     }).then(handleResponse<{ status: string; connection_id?: string; is_requester?: boolean; can_connect?: boolean }>),
   sendRequest: (receiverId: string) =>
@@ -241,10 +245,10 @@ const connections = {
     fetchWithAuth(`${API_BASE_URL}/connections/suggestions?limit=${limit}`, {
       headers: getAuthHeaders(),
     }).then(async (res) => {
-      const data = await handleResponse<{ suggestions: unknown[] }>(res);
-      const suggestions = Array.isArray(data) ? data : (data.suggestions ?? []);
+      const data = await handleResponse<any>(res);
+      const suggestions: import('@/types/api').User[] = Array.isArray(data) ? data : (data?.suggestions ?? []);
       return { suggestions };
-    }),
+    }) as Promise<import('@/types/api').SuggestionsResponse>,
 };
 
 // --- Messages ---

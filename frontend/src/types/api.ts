@@ -108,13 +108,14 @@ export interface PollVote {
 
 export interface Connection {
   id: string;
-  user_id: string;
-  connected_user_id: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  requester_id: string;
+  receiver_id: string;
+  status: 'pending' | 'accepted' | 'declined' | 'blocked';
   created_at: string;
   updated_at: string;
-  user?: User;
-  connected_user?: User;
+  requester?: User;
+  receiver?: User;
+  user?: User; // The other person in the connection
 }
 
 export interface ConnectionStatus {
@@ -164,7 +165,7 @@ export interface CommentsResponse {
 }
 
 export interface ConnectionsResponse {
-  connections: User[];
+  connections: Connection[];
 }
 
 export interface SuggestionsResponse {

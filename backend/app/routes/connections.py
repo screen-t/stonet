@@ -152,6 +152,34 @@ def delete_connection(connection_id: str, user_id: str = Depends(require_auth)):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@router.get("/check/by-id/{other_user_id}")
+def check_connection_status_by_id(other_user_id: str, user_id: str = Depends(require_auth)):
+    """Check connection status with a specific user by their ID"""
+    try:
+        connection = supabase.table("connections").select("*").or_(
+            f"and(requester_id.eq.{user_id},receiver_id.eq.{other_user_id}),and(requester_id.eq.{other_user_id},receiver_id.eq.{user_id})"
+        ).execute()
+
+        if not connection.data:
+            return {"status": "none", "can_connect": True}
+
+        conn = connection.data[0]
+        is_requester = conn["requester_id"] == user_id
+        status = conn["status"]
+
+        # If pending and they sent to me, flag it as pending_from_them
+        if status == "pending" and not is_requester:
+            status = "pending_from_them"
+
+        return {
+            "status": status,
+            "connection_id": conn["id"],
+            "is_requester": is_requester,
+            "can_connect": False
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 @router.get("/check/{username}")
 def check_connection_status(username: str, user_id: str = Depends(require_auth)):
     """Check connection status with a specific user"""

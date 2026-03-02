@@ -25,3 +25,4 @@ class ConnectionResponse(BaseModel):
     # Populated separately
     requester: Optional[dict] = None
     receiver: Optional[dict] = None
+    user: Optional[dict] = None  # The "other" person in the connection
