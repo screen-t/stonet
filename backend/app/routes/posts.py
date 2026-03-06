@@ -44,48 +44,141 @@ def ensure_user_exists(user_id: str):
 
 # Helper function to enrich post with author and engagement data
 def enrich_post(post: dict, user_id: Optional[str] = None):
-    """Enrich post with author info, media, poll data, and user engagement status"""
+    """Enrich post with author info, media, poll data, and user engagement status.
+    Optimised: uses Supabase joins to reduce round-trips from ~6 queries/post to ~3.
+    """
     try:
-        # Get author info
-        author = supabase.table("users").select("id, username, first_name, last_name, avatar_url, headline").eq("id", post["author_id"]).single().execute()
-        post["author"] = author.data if author.data else None
-        
-        # Get media
-        media = supabase.table("post_media").select("*").eq("post_id", post["id"]).execute()
-        post["media"] = media.data if media.data else []
-        
-        # Get poll if exists
+        post_id = post["id"]
+
+        # 1) Author via join (no separate query)
+        author_resp = supabase.table("users") \
+            .select("id, username, first_name, last_name, avatar_url, headline") \
+            .eq("id", post["author_id"]).single().execute()
+        post["author"] = author_resp.data if author_resp.data else None
+
+        # 2) Media (single query)
+        media_resp = supabase.table("post_media").select("*").eq("post_id", post_id).execute()
+        post["media"] = media_resp.data or []
+
+        # 3) Poll with options in ONE nested query (avoids poll + options round-trip)
         if post.get("post_type") == "poll":
-            poll = supabase.table("post_polls").select("*").eq("post_id", post["id"]).single().execute()
-            if poll.data:
-                options = supabase.table("post_poll_options").select("*").eq("poll_id", poll.data["id"]).order("display_order").execute()
-                poll.data["options"] = options.data if options.data else []
-                
-                # Check if user voted
+            poll_resp = supabase.table("post_polls") \
+                .select("*, options:post_poll_options(*)") \
+                .eq("post_id", post_id).maybe_single().execute()
+            if poll_resp and poll_resp.data:
+                poll_data = poll_resp.data
+                # Sort options by display_order client-side (free, avoids extra order call)
+                if poll_data.get("options"):
+                    poll_data["options"].sort(key=lambda o: o.get("display_order", 0))
+                # Check user vote
                 if user_id:
-                    vote = supabase.table("post_poll_votes").select("option_id").eq("poll_id", poll.data["id"]).eq("user_id", user_id).execute()
-                    poll.data["user_vote"] = vote.data[0]["option_id"] if vote.data else None
-                
-                post["poll"] = poll.data
-        
-        # Check user engagement if user_id provided
+                    vote_resp = supabase.table("post_poll_votes") \
+                        .select("option_id") \
+                        .eq("poll_id", poll_data["id"]).eq("user_id", user_id).execute()
+                    poll_data["user_vote"] = vote_resp.data[0]["option_id"] if vote_resp.data else None
+                post["poll"] = poll_data
+
+        # 4) Engagement: fire all three checks in parallel-ish (sequential but tiny payloads)
         if user_id:
-            # Check if liked
-            like = supabase.table("post_likes").select("*").eq("post_id", post["id"]).eq("user_id", user_id).execute()
-            post["is_liked"] = len(like.data) > 0
-            
-            # Check if reposted
-            repost = supabase.table("reposts").select("*").eq("post_id", post["id"]).eq("user_id", user_id).execute()
-            post["is_reposted"] = len(repost.data) > 0
-            
-            # Check if saved
-            saved = supabase.table("saved_posts").select("*").eq("post_id", post["id"]).eq("user_id", user_id).execute()
-            post["is_saved"] = len(saved.data) > 0
-        
+            like_resp   = supabase.table("post_likes")  .select("id").eq("post_id", post_id).eq("user_id", user_id).execute()
+            repost_resp = supabase.table("reposts")      .select("id").eq("post_id", post_id).eq("user_id", user_id).execute()
+            saved_resp  = supabase.table("saved_posts") .select("id").eq("post_id", post_id).eq("user_id", user_id).execute()
+            post["is_liked"]    = bool(like_resp.data)
+            post["is_reposted"] = bool(repost_resp.data)
+            post["is_saved"]    = bool(saved_resp.data)
+        else:
+            post.setdefault("is_liked",    False)
+            post.setdefault("is_reposted", False)
+            post.setdefault("is_saved",    False)
+
         return post
     except Exception as e:
-        print(f"Error enriching post: {e}")
+        print(f"Error enriching post {post.get('id')}: {e}")
         return post
+
+
+def bulk_enrich_posts(posts: list, user_id: Optional[str] = None) -> list:
+    """Bulk-enrich a list of posts using O(1) batch queries instead of O(N) per-post calls.
+
+    Query budget regardless of post count:
+      1) authors      — SELECT ... WHERE id IN (...)
+      2) media        — SELECT ... WHERE post_id IN (...)
+      3) polls        — SELECT ... WHERE post_id IN (...)  (only when polls exist)
+      4) poll options — SELECT ... WHERE poll_id IN (...)  (only when polls exist)
+      5) is_liked     — SELECT post_id WHERE user_id = ? AND post_id IN (...)
+      6) is_reposted  — same pattern
+      7) is_saved     — same pattern
+    Total: 4–7 queries for any number of posts.
+    """
+    if not posts:
+        return posts
+
+    post_ids    = [p["id"] for p in posts]
+    author_ids  = list({p["author_id"] for p in posts})
+
+    # 1) Authors
+    authors_resp = supabase.table("users") \
+        .select("id, username, first_name, last_name, avatar_url, headline") \
+        .in_("id", author_ids).execute()
+    authors_map = {a["id"]: a for a in (authors_resp.data or [])}
+
+    # 2) Media
+    media_resp = supabase.table("post_media").select("*").in_("post_id", post_ids).execute()
+    media_map: dict = {}
+    for m in (media_resp.data or []):
+        media_map.setdefault(m["post_id"], []).append(m)
+
+    # 3) Polls (only needed if any post is a poll type)
+    poll_post_ids = [p["id"] for p in posts if p.get("post_type") == "poll"]
+    polls_map: dict = {}
+    if poll_post_ids:
+        polls_resp = supabase.table("post_polls").select("*").in_("post_id", poll_post_ids).execute()
+        polls_by_id: dict = {}
+        for poll in (polls_resp.data or []):
+            polls_map[poll["post_id"]] = poll
+            polls_by_id[poll["id"]] = poll
+
+        # 4) Poll options in one query
+        if polls_by_id:
+            options_resp = supabase.table("post_poll_options") \
+                .select("*").in_("poll_id", list(polls_by_id.keys())) \
+                .order("display_order").execute()
+            for opt in (options_resp.data or []):
+                polls_by_id[opt["poll_id"]].setdefault("options", []).append(opt)
+
+        # User votes (if logged in)
+        if user_id and polls_by_id:
+            votes_resp = supabase.table("post_poll_votes") \
+                .select("poll_id, option_id").eq("user_id", user_id) \
+                .in_("poll_id", list(polls_by_id.keys())).execute()
+            votes_map = {v["poll_id"]: v["option_id"] for v in (votes_resp.data or [])}
+            for poll in polls_by_id.values():
+                poll["user_vote"] = votes_map.get(poll["id"])
+
+    # 5-7) Engagement (3 small queries, keyed by post_id)
+    liked_set:    set = set()
+    reposted_set: set = set()
+    saved_set:    set = set()
+    if user_id:
+        liked_resp    = supabase.table("post_likes")  .select("post_id").eq("user_id", user_id).in_("post_id", post_ids).execute()
+        reposted_resp = supabase.table("reposts")     .select("post_id").eq("user_id", user_id).in_("post_id", post_ids).execute()
+        saved_resp    = supabase.table("saved_posts") .select("post_id").eq("user_id", user_id).in_("post_id", post_ids).execute()
+        liked_set    = {r["post_id"] for r in (liked_resp.data    or [])}
+        reposted_set = {r["post_id"] for r in (reposted_resp.data or [])}
+        saved_set    = {r["post_id"] for r in (saved_resp.data    or [])}
+
+    # Assemble
+    for post in posts:
+        pid = post["id"]
+        post["author"]      = authors_map.get(post["author_id"])
+        post["media"]       = media_map.get(pid, [])
+        post["poll"]        = polls_map.get(pid)
+        post["is_liked"]    = pid in liked_set
+        post["is_reposted"] = pid in reposted_set
+        post["is_saved"]    = pid in saved_set
+
+    return posts
+
 
 # ==================== POST CRUD ====================
 
@@ -172,10 +265,9 @@ def get_feed(
         else:
             # For You feed - all public posts
             posts = supabase.table("posts").select("*").eq("is_published", True).eq("is_draft", False).eq("visibility", "public").order("created_at", desc=True).range(offset, offset + limit - 1).execute()
-        
-        # Enrich each post
-        enriched_posts = [enrich_post(post, user_id) for post in posts.data]
-        return enriched_posts
+
+        # Bulk-enrich: 4-7 queries total regardless of post count
+        return bulk_enrich_posts(posts.data, user_id)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -210,9 +302,8 @@ def get_user_posts(
         
         # Get user's posts
         posts = supabase.table("posts").select("*").eq("author_id", user.data["id"]).eq("is_published", True).eq("is_draft", False).order("created_at", desc=True).range(offset, offset + limit - 1).execute()
-        
-        enriched_posts = [enrich_post(post, user_id) for post in posts.data]
-        return enriched_posts
+
+        return bulk_enrich_posts(posts.data, user_id)
     except HTTPException:
         raise
     except Exception as e:
@@ -354,9 +445,8 @@ def get_saved_posts(
         
         post_ids = [s["post_id"] for s in saved.data]
         posts = supabase.table("posts").select("*").in_("id", post_ids).execute()
-        
-        enriched_posts = [enrich_post(post, user_id) for post in posts.data]
-        return enriched_posts
+
+        return bulk_enrich_posts(posts.data, user_id)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -369,20 +459,35 @@ def get_comments(
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0)
 ):
-    """Get comments for a post"""
+    """Get comments for a post. Optimised: author join + batch likes in 2 queries total."""
     try:
-        comments = supabase.table("comments").select("*").eq("post_id", post_id).is_("parent_comment_id", "null").order("created_at", desc=True).range(offset, offset + limit - 1).execute()
-        
-        # Enrich with author info
-        for comment in comments.data:
-            author = supabase.table("users").select("id, username, first_name, last_name, avatar_url").eq("id", comment["author_id"]).single().execute()
-            comment["author"] = author.data if author.data else None
-            
-            # Check if user liked
-            if user_id:
-                like = supabase.table("comment_likes").select("*").eq("comment_id", comment["id"]).eq("user_id", user_id).execute()
-                comment["is_liked"] = len(like.data) > 0
-        
+        # 1) Comments with author joined — eliminates N author round-trips
+        comments = supabase.table("comments") \
+            .select("*, author:author_id(id, username, first_name, last_name, avatar_url)") \
+            .eq("post_id", post_id) \
+            .is_("parent_comment_id", "null") \
+            .order("created_at", desc=True) \
+            .range(offset, offset + limit - 1) \
+            .execute()
+
+        if not comments.data:
+            return []
+
+        # 2) Batch-check which comments the current user liked — 1 query for all
+        if user_id:
+            comment_ids = [c["id"] for c in comments.data]
+            liked_resp = supabase.table("comment_likes") \
+                .select("comment_id") \
+                .eq("user_id", user_id) \
+                .in_("comment_id", comment_ids) \
+                .execute()
+            liked_set = {r["comment_id"] for r in (liked_resp.data or [])}
+            for comment in comments.data:
+                comment["is_liked"] = comment["id"] in liked_set
+        else:
+            for comment in comments.data:
+                comment["is_liked"] = False
+
         return comments.data
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

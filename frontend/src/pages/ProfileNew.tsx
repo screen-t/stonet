@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -37,6 +37,7 @@ export const ProfilePage = () => {
   const { userId } = useParams<{ userId?: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
@@ -222,7 +223,7 @@ export const ProfilePage = () => {
                       <>
                         {connectionStatus?.status === 'accepted' ? (
                           <>
-                            <Button variant="default">
+                            <Button variant="default" onClick={() => navigate(`/messages/${profileUserId}`)}>
                               <MessageSquare className="w-4 h-4 mr-2" />
                               Message
                             </Button>

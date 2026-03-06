@@ -67,23 +67,36 @@ export interface Skill {
 
 export interface Post {
   id: string;
-  user_id: string;
+  // Backend uses author_id; user_id kept for legacy compatibility
+  user_id?: string;
+  author_id?: string;
   content: string;
+  // Backend returns media as objects; media_urls kept for legacy
   media_urls?: string[];
+  media?: Array<{ url: string; media_type?: string; thumbnail_url?: string | null }>;
   poll_options?: string[];
   poll_duration_hours?: number;
   visibility: 'public' | 'connections' | 'private';
-  is_repost: boolean;
+  is_repost?: boolean;
   original_post_id?: string;
   repost_comment?: string;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
+  edited_at?: string | null;
   author?: User;
+  // Backend field names (snake_case without trailing 's')
+  like_count?: number;
+  comment_count?: number;
+  repost_count?: number;
+  share_count?: number;
+  // Legacy aliases — keep for any code that still uses these
   likes_count?: number;
   comments_count?: number;
   reposts_count?: number;
   is_liked?: boolean;
   is_reposted?: boolean;
+  is_saved?: boolean;
+  poll?: { id: string; question: string; ends_at?: string | null; options?: Array<{ id: string; option_text: string; vote_count: number; display_order: number }>; user_vote?: string | null };
   poll_votes?: PollVote[];
   original_post?: Post;
   total_votes?: number;

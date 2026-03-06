@@ -2,32 +2,14 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { CreatePostBox } from "@/components/feed/CreatePostBox";
-import { CreatePostModal } from "@/components/feed/CreatePostModal";
-import { PostCard, PostData } from "@/components/feed/PostCard";
+import { CreatePostModalNew } from "@/components/feed/CreatePostModalNew";
+import { PostCardNew } from "@/components/feed/PostCardNew";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import { Sparkles, Users, Loader2, RefreshCw } from "lucide-react";
 import { backendApi } from "@/lib/backend-api";
 import { Button } from "@/components/ui/button";
 import { Post } from '@/types/api';
-
-// Helper function to format time ago
-function formatTimeAgo(date: Date): string {
-  const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
-  
-  if (seconds < 60) return "Just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  const weeks = Math.floor(days / 7);
-  if (weeks < 4) return `${weeks}w ago`;
-  const months = Math.floor(days / 30);
-  if (months < 12) return `${months}mo ago`;
-  return `${Math.floor(months / 12)}y ago`;
-}
 
 const FeedNew = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -38,58 +20,14 @@ const FeedNew = () => {
   const { data: feedData, isLoading, error, refetch } = useQuery<Post[]>({
     queryKey: ['feed', activeTab],
     queryFn: async () => {
-      const result = await backendApi.posts.getFeed(activeTab as 'for_you' | 'following', 50, 0);
+      const result = await backendApi.posts.getFeed(activeTab as 'for_you' | 'following', 20, 0);
       return result as Post[];
     },
-    refetchInterval: 60000, // Refetch every minute
+    staleTime: 1000 * 60 * 2,      // 2 min — feed-specific override
+    refetchInterval: 1000 * 60 * 5, // Refetch every 5 minutes (was every 60 seconds)
   });
 
-  const handleCreatePost = async (data: {
-    content: string;
-    visibility: string;
-    image?: string;
-  }) => {
-    try {
-      await backendApi.posts.createPost({
-        content: data.content,
-        visibility: data.visibility,
-        media: data.image ? [{ url: data.image, media_type: "image" }] : undefined,
-      });
-      // Refetch feed to show new post
-      queryClient.invalidateQueries({ queryKey: ['feed'] });
-      setIsCreateModalOpen(false);
-    } catch (error) {
-      console.error('Failed to create post:', error);
-      alert('Failed to create post. Please try again.');
-    }
-  };
-
-  // Transform backend posts to PostData format
-  const posts: PostData[] = (feedData || []).map((post: any) => {
-    const firstName = post.author?.first_name || '';
-    const lastName = post.author?.last_name || '';
-    const fullName = [firstName, lastName].filter(Boolean).join(' ');
-    
-    return {
-      id: post.id,
-      author: {
-        name: fullName || post.author?.username || "Unknown User",
-        username: post.author?.username || "user",
-        avatar: post.author?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${post.author?.username || 'user'}`,
-        headline: post.author?.headline || "",
-      },
-      content: post.content,
-      image: post.media?.[0]?.url,
-      tags: post.hashtags?.map((tag: string) => `#${tag}`) || [],
-      likes: post.like_count || 0,
-      comments: post.comment_count || 0,
-      shares: post.share_count || 0,
-      isLiked: post.is_liked || false,
-      isSaved: post.is_saved || false,
-      visibility: post.visibility as "public" | "connections" | "private",
-      createdAt: formatTimeAgo(new Date(post.created_at)),
-    };
-  });
+  const posts: Post[] = feedData || [];
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as "for_you" | "following");
@@ -151,14 +89,14 @@ const FeedNew = () => {
                 </p>
               </div>
             ) : (
-              posts.map((post: any, index: number) => (
+              posts.map((post, index) => (
                 <motion.div
                   key={post.id}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
+                  transition={{ delay: Math.min(index * 0.03, 0.15) }}
                 >
-                  <PostCard post={post} />
+                  <PostCardNew post={post} />
                 </motion.div>
               ))
             )}
@@ -185,14 +123,14 @@ const FeedNew = () => {
                 </p>
               </div>
             ) : (
-              posts.map((post: any, index: number) => (
+              posts.map((post, index) => (
                 <motion.div
                   key={post.id}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
+                  transition={{ delay: Math.min(index * 0.03, 0.15) }}
                 >
-                  <PostCard post={post} />
+                  <PostCardNew post={post} />
                 </motion.div>
               ))
             )}
@@ -201,10 +139,10 @@ const FeedNew = () => {
       </div>
 
       {/* Create Post Modal */}
-      <CreatePostModal
+      <CreatePostModalNew
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onSubmit={handleCreatePost}
+        onPostCreated={() => queryClient.invalidateQueries({ queryKey: ['feed'] })}
       />
     </AppLayout>
   );

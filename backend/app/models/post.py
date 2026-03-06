@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, model_validator
 from typing import Optional, List
 from datetime import datetime
 from enum import Enum
@@ -39,13 +39,19 @@ class PollCreate(BaseModel):
     ends_at: Optional[datetime] = None
 
 class PostCreate(BaseModel):
-    content: str = Field(..., min_length=1, max_length=3000)
+    content: str = Field(default="", max_length=3000)
     post_type: PostType = PostType.TEXT
     visibility: VisibilityType = VisibilityType.PUBLIC
     media: Optional[List[PostMedia]] = None
     poll: Optional[PollCreate] = None
     scheduled_at: Optional[datetime] = None
     is_draft: bool = False
+
+    @model_validator(mode='after')
+    def require_content_or_media_or_poll(self):
+        if not self.content.strip() and not self.media and not self.poll:
+            raise ValueError('Content, media, or poll must be provided')
+        return self
 
 class PostUpdate(BaseModel):
     content: Optional[str] = Field(None, min_length=1, max_length=3000)

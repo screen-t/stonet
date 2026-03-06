@@ -215,59 +215,121 @@ export const PostCardNew = ({ post }: PostCardNewProps) => {
       </div>
 
       {/* Media */}
-      {post.media_urls && post.media_urls.length > 0 && (
-        <div className="mb-4 rounded-lg overflow-hidden">
-          <img
-            src={post.media_urls[0]}
-            alt="Post media"
-            className="w-full object-cover max-h-96"
-            onError={(e) => {
-              e.currentTarget.src = "https://via.placeholder.com/800x400?text=Image+Not+Found";
-            }}
-          />
-        </div>
-      )}
+      {(() => {
+        // Backend returns media as an array of objects: [{ url, media_type, ... }]
+        // but the Post type also has a legacy media_urls string array — support both.
+        const mediaItems: Array<{ url: string; media_type?: string }> =
+          (post as any).media?.length
+            ? (post as any).media
+            : (post.media_urls ?? []).map((u: string) => ({ url: u }));
+        if (!mediaItems.length) return null;
+        return (
+          <div className="mb-4 space-y-2">
+            {mediaItems.map((item, idx) => (
+              item.media_type === "video" ? (
+                <video
+                  key={idx}
+                  src={item.url}
+                  controls
+                  className="w-full rounded-lg max-h-96 object-cover"
+                />
+              ) : (
+                <img
+                  key={idx}
+                  src={item.url}
+                  alt="Post media"
+                  className="w-full rounded-lg object-cover max-h-96"
+                  onError={(e) => { e.currentTarget.style.display = "none"; }}
+                />
+              )
+            ))}
+          </div>
+        );
+      })()}
 
       {/* Poll */}
-      {post.poll_options && post.poll_options.length > 0 && (
-        <div className="mb-4 space-y-2">
-          {post.poll_options.map((option: string, index: number) => {
-            const pollVote = post.poll_votes?.find(pv => pv.option_index === index);
-            const totalVotes = post.total_votes || 0;
-            const votes = Number(pollVote?.votes_count || 0);
-            const percentage = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
-            const hasVoted = post.user_vote !== undefined && post.user_vote !== null;
-            const isSelected = post.user_vote === index;
+      {(() => {
+        // Backend returns poll as: { id, question, ends_at, options: [{ id, option_text, vote_count, display_order }], user_vote: <option_id> | null }
+        // Legacy shape: post.poll_options (string[]) with post.poll_votes / post.total_votes
+        const pollObj = (post as any).poll as { id?: string; question?: string; options?: Array<{ id: string; option_text: string; vote_count: number; display_order: number }>; user_vote?: string | null } | undefined;
+        const legacyOptions = post.poll_options;
 
-            return (
-              <button
-                key={index}
-                onClick={() => !hasVoted && handleVote(index)}
-                disabled={hasVoted}
-                className={cn(
-                  "w-full p-3 rounded-lg border text-left relative overflow-hidden transition-colors",
-                  hasVoted ? "cursor-not-allowed" : "hover:border-primary",
-                  isSelected && "border-primary bg-primary/5"
-                )}
-              >
-                <div
-                  className="absolute inset-0 bg-primary/10"
-                  style={{ width: `${percentage}%` }}
-                />
-                <div className="relative flex items-center justify-between">
-                  <span className="font-medium">{option}</span>
-                  {hasVoted && <span className="text-sm text-muted-foreground">{percentage.toFixed(0)}%</span>}
-                </div>
-              </button>
-            );
-          })}
-          {post.total_votes > 0 && (
-            <p className="text-xs text-muted-foreground text-center">
-              {post.total_votes} vote{post.total_votes !== 1 ? 's' : ''}
-            </p>
-          )}
-        </div>
-      )}
+        if (pollObj?.options?.length) {
+          const totalVotes = pollObj.options.reduce((sum, o) => sum + (o.vote_count || 0), 0);
+          const hasVoted = !!pollObj.user_vote;
+          return (
+            <div className="mb-4 space-y-2">
+              {pollObj.options.map((option, index) => {
+                const percentage = totalVotes > 0 ? (option.vote_count / totalVotes) * 100 : 0;
+                const isSelected = pollObj.user_vote === option.id;
+                return (
+                  <button
+                    key={option.id}
+                    onClick={() => !hasVoted && handleVote(index)}
+                    disabled={hasVoted}
+                    className={cn(
+                      "w-full p-3 rounded-lg border text-left relative overflow-hidden transition-colors",
+                      hasVoted ? "cursor-not-allowed" : "hover:border-primary",
+                      isSelected && "border-primary bg-primary/5"
+                    )}
+                  >
+                    <div className="absolute inset-0 bg-primary/10" style={{ width: `${percentage}%` }} />
+                    <div className="relative flex items-center justify-between">
+                      <span className="font-medium">{option.option_text}</span>
+                      {hasVoted && <span className="text-sm text-muted-foreground">{percentage.toFixed(0)}%</span>}
+                    </div>
+                  </button>
+                );
+              })}
+              {totalVotes > 0 && (
+                <p className="text-xs text-muted-foreground text-center">
+                  {totalVotes} vote{totalVotes !== 1 ? 's' : ''}
+                </p>
+              )}
+            </div>
+          );
+        }
+
+        // Legacy fallback
+        if (legacyOptions?.length) {
+          const totalVotes = post.total_votes || 0;
+          const hasVoted = post.user_vote !== undefined && post.user_vote !== null;
+          return (
+            <div className="mb-4 space-y-2">
+              {legacyOptions.map((option: string, index: number) => {
+                const pollVote = post.poll_votes?.find(pv => pv.option_index === index);
+                const votes = Number(pollVote?.votes_count || 0);
+                const percentage = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
+                const isSelected = post.user_vote === index;
+                return (
+                  <button
+                    key={index}
+                    onClick={() => !hasVoted && handleVote(index)}
+                    disabled={hasVoted}
+                    className={cn(
+                      "w-full p-3 rounded-lg border text-left relative overflow-hidden transition-colors",
+                      hasVoted ? "cursor-not-allowed" : "hover:border-primary",
+                      isSelected && "border-primary bg-primary/5"
+                    )}
+                  >
+                    <div className="absolute inset-0 bg-primary/10" style={{ width: `${percentage}%` }} />
+                    <div className="relative flex items-center justify-between">
+                      <span className="font-medium">{option}</span>
+                      {hasVoted && <span className="text-sm text-muted-foreground">{percentage.toFixed(0)}%</span>}
+                    </div>
+                  </button>
+                );
+              })}
+              {totalVotes > 0 && (
+                <p className="text-xs text-muted-foreground text-center">
+                  {totalVotes} vote{totalVotes !== 1 ? 's' : ''}
+                </p>
+              )}
+            </div>
+          );
+        }
+        return null;
+      })()}
 
       {/* Actions */}
       <div className="flex items-center justify-between pt-3 border-t">
@@ -281,7 +343,7 @@ export const PostCardNew = ({ post }: PostCardNewProps) => {
           )}
         >
           <Heart className={cn("h-4 w-4", post.is_liked && "fill-current")} />
-          <span>{post.likes_count || 0}</span>
+          <span>{post.like_count ?? post.likes_count ?? 0}</span>
         </Button>
 
         <Button
@@ -291,7 +353,7 @@ export const PostCardNew = ({ post }: PostCardNewProps) => {
           className="gap-2"
         >
           <MessageCircle className="h-4 w-4" />
-          <span>{post.comments_count || 0}</span>
+          <span>{post.comment_count ?? post.comments_count ?? 0}</span>
         </Button>
 
         <Button
@@ -304,7 +366,7 @@ export const PostCardNew = ({ post }: PostCardNewProps) => {
           )}
         >
           <Repeat2 className="h-4 w-4" />
-          <span>{post.reposts_count || 0}</span>
+          <span>{post.repost_count ?? post.reposts_count ?? 0}</span>
         </Button>
 
         <Button variant="ghost" size="sm" className="gap-2">

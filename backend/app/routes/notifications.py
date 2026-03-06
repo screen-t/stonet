@@ -28,15 +28,15 @@ def get_notifications(
 
 @router.get("/unread-count")
 def get_unread_count(user_id: str = Depends(require_auth)):
-    """Get count of unread notifications"""
+    """Get count of unread notifications. Returns 0 on timeout instead of error."""
     try:
         count = supabase.table("notifications").select("id", count="exact").eq("user_id", user_id).eq("is_read", False).execute()
         
         return {"count": count.count if count.count else 0}
-    except HTTPException:
-        raise
     except Exception as e:
-        raise HTTPException(status_code=503, detail="Service temporarily unavailable")
+        # Return 0 on timeout rather than 503 — notification bell will be empty but won't error
+        print(f"Warning: unread_count query failed for {user_id}: {e}")
+        return {"count": 0}
 
 @router.put("/{notification_id}/read")
 def mark_notification_as_read(notification_id: str, user_id: str = Depends(require_auth)):

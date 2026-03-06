@@ -97,9 +97,13 @@ const NotificationsNew = () => {
 
   const formatTimestamp = (timestamp: string) => {
     try {
-      return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
+      const ts =
+        timestamp.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(timestamp)
+          ? timestamp
+          : timestamp + 'Z';
+      return formatDistanceToNow(new Date(ts), { addSuffix: true });
     } catch {
-      return "recently";
+      return 'recently';
     }
   };
 
@@ -109,10 +113,10 @@ const NotificationsNew = () => {
       case 'comment':
       case 'repost':
       case 'mention':
-        return `/post/${notification.post_id}`;
-      case 'connection':
-      case 'follow':
-        return `/profile/${notification.actor_id}`;
+        return notification.post_id ? `/post/${notification.post_id}` : '#';
+      case 'connection_request':
+      case 'connection_accepted':
+        return notification.actor_id ? `/profile/${notification.actor_id}` : '#';
       default:
         return '#';
     }

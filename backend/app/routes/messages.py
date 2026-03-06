@@ -226,7 +226,7 @@ def mark_message_as_read(message_id: str, user_id: str = Depends(require_auth)):
 
 @router.get("/unread-count")
 def get_unread_count(user_id: str = Depends(require_auth)):
-    """Get total unread message count"""
+    """Get total unread message count. Returns 0 on timeout instead of error."""
     try:
         # Get all conversations
         participant_data = supabase.table("conversation_participants").select("conversation_id").eq("user_id", user_id).execute()
@@ -240,10 +240,10 @@ def get_unread_count(user_id: str = Depends(require_auth)):
         unread = supabase.table("messages").select("id", count="exact").in_("conversation_id", conversation_ids).eq("is_read", False).neq("sender_id", user_id).execute()
         
         return {"count": unread.count if unread.count else 0}
-    except HTTPException:
-        raise
     except Exception as e:
-        raise HTTPException(status_code=503, detail="Service temporarily unavailable")
+        # Return 0 on timeout rather than 503 — unread badge will be empty but won't error
+        print(f"Warning: messages unread_count query failed for {user_id}: {e}")
+        return {"count": 0}
 
 @router.delete("/conversations/{conversation_id}")
 def delete_conversation(conversation_id: str, user_id: str = Depends(require_auth)):

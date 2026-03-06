@@ -1,6 +1,7 @@
 from fastapi import Request, HTTPException
 from app.lib.supabase import supabase
 import httpx
+import logging
 
 def require_auth(request: Request):
     auth_header = request.headers.get("Authorization")
@@ -17,10 +18,10 @@ def require_auth(request: Request):
             raise HTTPException(status_code=401, detail="Invalid token")
         
         return user_res.user.id
-    except httpx.ReadError as e:
-        print(f"Supabase connection error: {e}")
-        raise HTTPException(status_code=503, detail="Authentication service temporarily unavailable")
+    except HTTPException:
+        raise  # Re-raise FastAPI exceptions immediately
     except Exception as e:
-        print(f"Auth error: {e}")
+        logging.warning(f"Auth validation failed: {e}")
         raise HTTPException(status_code=401, detail="Invalid token")
+
 

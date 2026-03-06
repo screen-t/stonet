@@ -27,7 +27,17 @@ import OAuthCallback from "./pages/OAuthCallBack";
 import Companies from "./pages/Companies";
 import Saved from "./pages/Saved";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,      // 5 min — data stays fresh, no unnecessary refetches
+      gcTime: 1000 * 60 * 15,        // 15 min — keep unused data in cache longer
+      retry: 1,                      // retry once on failure
+      refetchOnWindowFocus: false,   // don't reload the whole feed on alt+tab
+      refetchOnMount: false,         // don't re-hit the API if data is still fresh
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

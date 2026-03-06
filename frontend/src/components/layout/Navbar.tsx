@@ -51,14 +51,14 @@ export const Navbar = ({ isAuthenticated = false }: NavbarProps) => {
     queryKey: ['unreadMessages'],
     queryFn: () => backendApi.messages.getUnreadCount(),
     enabled: isAuthenticated,
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 60000, // Reduce from 30s to 60s to avoid socket pressure on Windows
   });
 
   const { data: notificationCount } = useQuery({
     queryKey: ['unreadNotifications'],
     queryFn: () => backendApi.notifications.getUnreadCount(),
     enabled: isAuthenticated,
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 60000, // Reduce from 30s to 60s to avoid socket pressure on Windows
   });
 
   const unreadMessages = messageCount?.count || 0;

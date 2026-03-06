@@ -202,11 +202,14 @@ const posts = {
       method: "DELETE",
       headers: getAuthHeaders(),
     }).then(handleResponse),
-  getComments: (postId: string, limit: number, offset: number) =>
-    fetchWithAuth(
+  getComments: async (postId: string, limit: number, offset: number): Promise<import('@/types/api').CommentsResponse> => {
+    const raw = await fetchWithAuth(
       `${API_BASE_URL}/posts/${postId}/comments?limit=${limit}&offset=${offset}`,
       { headers: getAuthHeaders() }
-    ).then(handleResponse<unknown[]>),
+    ).then(handleResponse<import('@/types/api').Comment[]>);
+    // Backend returns a raw array; wrap to match CommentsResponse shape
+    return { comments: Array.isArray(raw) ? raw : [] };
+  },
   votePoll: (postId: string, optionId: string) =>
     fetchWithAuth(`${API_BASE_URL}/posts/${postId}/poll/vote`, {
       method: "POST",
@@ -312,11 +315,11 @@ const messages = {
 
 // --- Notifications ---
 const notifications = {
-  getNotifications: async (limit: number, offset: number, unreadOnly?: boolean) => {
+  getNotifications: async (limit: number, offset: number, unreadOnly?: boolean): Promise<import('@/types/api').NotificationsResponse> => {
     const list = await fetchWithAuth(
       `${API_BASE_URL}/notifications?limit=${limit}&offset=${offset}&unread_only=${unreadOnly ?? false}`,
       { headers: getAuthHeaders() }
-    ).then(handleResponse<unknown[]>);
+    ).then(handleResponse<import('@/types/api').Notification[]>);
     return { notifications: Array.isArray(list) ? list : [] };
   },
   getUnreadCount: () =>
@@ -342,28 +345,28 @@ const notifications = {
 
 // --- Search ---
 const search = {
-  searchAll: async (q: string, limit?: number) => {
+  searchAll: async (q: string, limit?: number): Promise<import('@/types/api').SearchResponse> => {
     const data = await fetchWithAuth(
       `${API_BASE_URL}/search/all?q=${encodeURIComponent(q)}&users_limit=${limit ?? 20}&posts_limit=${limit ?? 20}`,
       { headers: getAuthHeaders() }
-    ).then(handleResponse<{ users?: { results: unknown[] }; posts?: { results: unknown[] } }>);
+    ).then(handleResponse<{ users?: { results: import('@/types/api').User[] }; posts?: { results: import('@/types/api').Post[] } }>);
     return {
       users: data.users?.results ?? [],
       posts: data.posts?.results ?? [],
     };
   },
-  searchUsers: async (q: string, limit: number, _offset?: number) => {
+  searchUsers: async (q: string, limit: number, _offset?: number): Promise<import('@/types/api').SearchResponse> => {
     const data = await fetchWithAuth(
       `${API_BASE_URL}/search/users?q=${encodeURIComponent(q)}&limit=${limit}`,
       { headers: getAuthHeaders() }
-    ).then(handleResponse<{ results: unknown[]; count?: number }>);
+    ).then(handleResponse<{ results: import('@/types/api').User[]; count?: number }>);
     return { users: Array.isArray(data.results) ? data.results : [] };
   },
-  searchPosts: async (q: string, limit: number, _offset?: number) => {
+  searchPosts: async (q: string, limit: number, _offset?: number): Promise<import('@/types/api').SearchResponse> => {
     const data = await fetchWithAuth(
       `${API_BASE_URL}/search/posts?q=${encodeURIComponent(q)}&limit=${limit}`,
       { headers: getAuthHeaders() }
-    ).then(handleResponse<{ results: unknown[]; count?: number }>);
+    ).then(handleResponse<{ results: import('@/types/api').Post[]; count?: number }>);
     return { posts: Array.isArray(data.results) ? data.results : [] };
   },
 };

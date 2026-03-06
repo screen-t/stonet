@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/auth";
 import { backendApi } from "@/lib/backend-api";
+import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -23,13 +24,11 @@ import {
 } from "@/components/ui/select";
 import {
   Image,
-  Video,
   BarChart3,
   X,
-  Plus,
-  Trash2,
   Send,
   Loader2,
+  Plus,
 } from "lucide-react";
 
 export interface CreatePostModalProps {
@@ -47,10 +46,44 @@ export const CreatePostModalNew = ({
   const { toast } = useToast();
   const [content, setContent] = useState("");
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
-  const [mediaInput, setMediaInput] = useState("");
   const [showPoll, setShowPoll] = useState(false);
   const [pollOptions, setPollOptions] = useState(["", ""]);
   const [pollDuration, setPollDuration] = useState(24);
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    setIsUploadingMedia(true);
+    try {
+      const uploaded: string[] = [];
+      for (const file of files) {
+        const ext = file.name.split(".").pop();
+        const path = `posts/${user?.id ?? "anon"}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error } = await supabase.storage
+          .from("post-media")
+          .upload(path, file, { upsert: false });
+        if (error) throw error;
+        const { data: urlData } = supabase.storage
+          .from("post-media")
+          .getPublicUrl(path);
+        uploaded.push(urlData.publicUrl);
+      }
+      setMediaUrls((prev) => [...prev, ...uploaded]);
+      toast({ title: `${uploaded.length} file(s) uploaded` });
+    } catch (err: any) {
+      toast({
+        title: "Upload failed",
+        description: err.message ?? "Could not upload file",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingMedia(false);
+      // Reset so the same file can be selected again if needed
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   // Create post mutation
   const createPostMutation = useMutation({
@@ -85,7 +118,6 @@ export const CreatePostModalNew = ({
   const resetForm = () => {
     setContent("");
     setMediaUrls([]);
-    setMediaInput("");
     setShowPoll(false);
     setPollOptions(["", ""]);
     setPollDuration(24);
@@ -136,13 +168,6 @@ export const CreatePostModalNew = ({
     createPostMutation.mutate(postData);
   };
 
-  const addMediaUrl = () => {
-    if (mediaInput.trim()) {
-      setMediaUrls([...mediaUrls, mediaInput.trim()]);
-      setMediaInput("");
-    }
-  };
-
   const removeMediaUrl = (index: number) => {
     setMediaUrls(mediaUrls.filter((_, i) => i !== index));
   };
@@ -176,12 +201,15 @@ export const CreatePostModalNew = ({
           {/* User Info */}
           <div className="flex items-center gap-3">
             <UserAvatar
-              name={user?.email || "User"}
+              src={(user as any)?.avatar_url}
+              name={`${(user as any)?.first_name ?? ""} ${(user as any)?.last_name ?? user?.email ?? "User"}`.trim()}
               size="md"
             />
             <div>
               <p className="font-semibold">
-                {user?.email}
+                {(user as any)?.first_name
+                  ? `${(user as any).first_name} ${(user as any).last_name ?? ""}`.trim()
+                  : user?.email}
               </p>
               <p className="text-xs text-muted-foreground">Post to Public</p>
             </div>
@@ -196,50 +224,31 @@ export const CreatePostModalNew = ({
             className="resize-none text-lg"
           />
 
-          {/* Media URLs */}
+          {/* Media preview grid */}
           {mediaUrls.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Media:</p>
+            <div className={`grid gap-2 ${mediaUrls.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
               {mediaUrls.map((url, index) => (
-                <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded">
-                  <img
-                    src={url}
-                    alt="Preview"
-                    className="w-16 h-16 object-cover rounded"
-                    onError={(e) => {
-                      e.currentTarget.src = "https://via.placeholder.com/64?text=Image";
-                    }}
-                  />
-                  <span className="flex-1 text-sm truncate">{url}</span>
-                  <Button
-                    size="icon"
-                    variant="ghost"
+                <div key={index} className="relative group rounded overflow-hidden bg-muted">
+                  {url.match(/\.(mp4|webm|mov)$/i) ? (
+                    <video src={url} className="w-full h-40 object-cover" />
+                  ) : (
+                    <img
+                      src={url}
+                      alt={`Media ${index + 1}`}
+                      className="w-full h-40 object-cover"
+                      onError={(e) => { e.currentTarget.src = "https://placehold.co/400x160?text=Image"; }}
+                    />
+                  )}
+                  <button
                     onClick={() => removeMediaUrl(index)}
+                    className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                    <X className="w-3 h-3" />
+                  </button>
                 </div>
               ))}
             </div>
           )}
-
-          {/* Add Media URL Input */}
-          <div className="flex gap-2">
-            <Input
-              placeholder="Enter image/video URL"
-              value={mediaInput}
-              onChange={(e) => setMediaInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  addMediaUrl();
-                }
-              }}
-            />
-            <Button onClick={addMediaUrl} variant="outline">
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
 
           {/* Poll Section */}
           {showPoll && (
@@ -307,13 +316,27 @@ export const CreatePostModalNew = ({
           {/* Action Bar */}
           <div className="flex items-center justify-between pt-4 border-t">
             <div className="flex gap-2">
+              {/* Hidden file input for media uploads */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                className="hidden"
+                onChange={handleFileSelect}
+              />
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => {}}
-                title="Add image/video"
+                onClick={() => fileInputRef.current?.click()}
+                title="Upload image/video"
+                disabled={isUploadingMedia}
               >
-                <Image className="w-5 h-5" />
+                {isUploadingMedia ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Image className="w-5 h-5" />
+                )}
               </Button>
               <Button
                 variant="ghost"
@@ -327,12 +350,12 @@ export const CreatePostModalNew = ({
             </div>
 
             <div className="flex gap-2">
-              <Button variant="outline" onClick={onClose} disabled={createPostMutation.isPending}>
+              <Button variant="outline" onClick={onClose} disabled={createPostMutation.isPending || isUploadingMedia}>
                 Cancel
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={createPostMutation.isPending || (!content.trim() && mediaUrls.length === 0)}
+                disabled={createPostMutation.isPending || isUploadingMedia || (!content.trim() && mediaUrls.length === 0)}
               >
                 {createPostMutation.isPending ? (
                   <>

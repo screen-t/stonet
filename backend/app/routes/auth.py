@@ -145,9 +145,12 @@ def login(payload: LoginRequest, request: Request):
             )
     
     # Update last active timestamp
-    supabase.table("users").update({
-        "last_active_at": "now()"
-    }).eq("id", auth_res.user.id).execute()
+    try:
+        supabase.table("users").update({
+            "last_active_at": "now()"
+        }).eq("id", auth_res.user.id).execute()
+    except Exception:
+        pass  # Non-critical, don't block login
     
     # Track login activity
     client_ip = request.client.host if request.client else "unknown"

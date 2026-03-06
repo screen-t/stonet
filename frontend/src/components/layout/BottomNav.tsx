@@ -18,13 +18,13 @@ export const BottomNav = () => {
   const { data: messageCount } = useQuery({
     queryKey: ["unreadMessages"],
     queryFn: () => backendApi.messages.getUnreadCount(),
-    refetchInterval: 30000,
+    refetchInterval: 60000, // 60 seconds (was 30)
   });
 
   const { data: notificationCount } = useQuery({
     queryKey: ["unreadNotifications"],
     queryFn: () => backendApi.notifications.getUnreadCount(),
-    refetchInterval: 30000,
+    refetchInterval: 60000, // 60 seconds (was 30)
   });
 
   const unreadMessages = messageCount?.count || 0;

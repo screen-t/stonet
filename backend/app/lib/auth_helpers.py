@@ -40,20 +40,29 @@ def track_login_activity(user_id: str, session_id: str, ip_address: str, user_ag
         else:
             device = "Desktop"
     
-    supabase.table("login_activity").insert({
-        "user_id": user_id,
-        "device": device,
-        "browser": browser,
-        "ip_address": ip_address,
-        "status": status,
-        "session_id": session_id,
-        "is_active": True,
-        "login_at": datetime.utcnow().isoformat()
-    }).execute()
+    try:
+        supabase.table("login_activity").insert({
+            "user_id": user_id,
+            "device": device,
+            "browser": browser,
+            "ip_address": ip_address,
+            "status": status,
+            "session_id": session_id,
+            "is_active": True,
+            "login_at": datetime.utcnow().isoformat()
+        }).execute()
+    except Exception as e:
+        # Non-critical: don't let activity tracking crash login
+        import logging
+        logging.warning(f"Failed to track login activity (non-fatal): {e}")
 
 def deactivate_session(session_id: str):
     """Mark a session as inactive"""
-    supabase.table("login_activity").update({
-        "is_active": False,
-        "logout_at": datetime.utcnow().isoformat()
-    }).eq("session_id", session_id).execute()
+    try:
+        supabase.table("login_activity").update({
+            "is_active": False,
+            "logout_at": datetime.utcnow().isoformat()
+        }).eq("session_id", session_id).execute()
+    except Exception as e:
+        import logging
+        logging.warning(f"Failed to deactivate session (non-fatal): {e}")
