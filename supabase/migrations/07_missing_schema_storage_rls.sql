@@ -150,7 +150,7 @@ BEGIN
 
   -- ---- POST_POLLS ----
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='post_polls' AND policyname='post_polls_service_all') THEN
-    CREATE POLICY post_polls_service_all ON post_polls FOR ALL USING (auth.role() = 'service_role');
+    CREATE POLICY post_polls_service_all ON post_polls USING (auth.role() = 'service_role') WITH CHECK (auth.role() = 'service_role');
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='post_polls' AND policyname='post_polls_select') THEN
     CREATE POLICY post_polls_select ON post_polls FOR SELECT USING (TRUE);
@@ -158,7 +158,7 @@ BEGIN
 
   -- ---- POST_POLL_OPTIONS ----
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='post_poll_options' AND policyname='poll_options_service_all') THEN
-    CREATE POLICY poll_options_service_all ON post_poll_options FOR ALL USING (auth.role() = 'service_role');
+    CREATE POLICY poll_options_service_all ON post_poll_options USING (auth.role() = 'service_role') WITH CHECK (auth.role() = 'service_role');
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='post_poll_options' AND policyname='poll_options_select') THEN
     CREATE POLICY poll_options_select ON post_poll_options FOR SELECT USING (TRUE);
@@ -166,10 +166,13 @@ BEGIN
 
   -- ---- POST_POLL_VOTES ----
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='post_poll_votes' AND policyname='poll_votes_service_all') THEN
-    CREATE POLICY poll_votes_service_all ON post_poll_votes FOR ALL USING (auth.role() = 'service_role');
+    CREATE POLICY poll_votes_service_all ON post_poll_votes USING (auth.role() = 'service_role') WITH CHECK (auth.role() = 'service_role');
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='post_poll_votes' AND policyname='poll_votes_auth') THEN
     CREATE POLICY poll_votes_auth ON post_poll_votes FOR ALL USING (user_id = auth.uid()::uuid);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='post_poll_votes' AND policyname='poll_votes_select') THEN
+    CREATE POLICY poll_votes_select ON post_poll_votes FOR SELECT USING (TRUE);
   END IF;
 
   -- ---- REPOSTS ----

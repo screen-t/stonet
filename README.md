@@ -154,7 +154,7 @@ stonet/
    **Backend (.env)** - Create in `backend/` directory:
    ```env
    SUPABASE_URL=your_supabase_url
-   SUPABASE_SERVICE_KEY=your_supabase_service_role_key
+   SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
    JWT_SECRET=your_jwt_secret_key
    ```
    
@@ -270,7 +270,7 @@ See `supabase/migrations/` for complete schema.
 ### Backend (.env)
 ```env
 SUPABASE_URL=              # Your Supabase project URL
-SUPABASE_SERVICE_KEY=      # Your Supabase service role key (server-side)
+SUPABASE_SERVICE_ROLE_KEY= # Your Supabase service role key (server-side)
 JWT_SECRET=                # Secret key for JWT token generation
 ```
 
