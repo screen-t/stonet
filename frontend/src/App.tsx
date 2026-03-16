@@ -26,6 +26,8 @@ import NotFound from "./pages/NotFound";
 import OAuthCallback from "./pages/OAuthCallBack";
 import Companies from "./pages/Companies";
 import Saved from "./pages/Saved";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,6 +56,8 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/auth/callback" element={<OAuthCallback />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
             {/* Protected routes */}
             <Route path="/feed" element={<RequireAuth><FeedNew /></RequireAuth>} />

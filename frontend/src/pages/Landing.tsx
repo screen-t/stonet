@@ -340,10 +340,10 @@ const Landing = () => {
               <Link to="#" className="hover:text-foreground transition-colors">
                 About
               </Link>
-              <Link to="#" className="hover:text-foreground transition-colors">
+              <Link to="/privacy-policy" className="hover:text-foreground transition-colors">
                 Privacy
               </Link>
-              <Link to="#" className="hover:text-foreground transition-colors">
+              <Link to="/terms-of-service" className="hover:text-foreground transition-colors">
                 Terms
               </Link>
               <Link to="#" className="hover:text-foreground transition-colors">
