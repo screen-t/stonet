@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -98,6 +98,27 @@ const Settings = () => {
     showEmail: false,
     showConnections: true,
     allowMessages: true,
+  });
+
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadAvatarMutation = useMutation({
+    mutationFn: (file: File) => backendApi.profile.uploadAvatar(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile', 'me'] });
+      toast({ title: "Profile photo updated!" });
+    },
+    onError: () => toast({ title: "Failed to upload photo", variant: "destructive" }),
+  });
+
+  const uploadCoverMutation = useMutation({
+    mutationFn: (file: File) => backendApi.profile.uploadCover(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile', 'me'] });
+      toast({ title: "Cover image updated!" });
+    },
+    onError: () => toast({ title: "Failed to upload cover", variant: "destructive" }),
   });
 
   // Mutation to update profile
@@ -231,8 +252,26 @@ const Settings = () => {
                     src={profileData?.avatar_url}
                     size="xl"
                   />
-                  <button className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors">
-                    <Camera className="h-4 w-4" />
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) uploadAvatarMutation.mutate(file);
+                      e.target.value = "";
+                    }}
+                  />
+                  <button
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors"
+                  >
+                    {uploadAvatarMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Camera className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
                 <div>
@@ -241,6 +280,41 @@ const Settings = () => {
                     JPG, PNG or GIF. Max 5MB.
                   </p>
                 </div>
+              </div>
+
+              {/* Cover Image */}
+              <div className="space-y-2">
+                <h3 className="font-semibold">Cover Image</h3>
+                <div className="relative h-28 rounded-lg overflow-hidden bg-gradient-to-r from-primary/20 to-primary/10">
+                  {profileData?.cover_url && (
+                    <img src={profileData.cover_url} alt="Cover" className="w-full h-full object-cover" />
+                  )}
+                  <input
+                    ref={coverInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) uploadCoverMutation.mutate(file);
+                      e.target.value = "";
+                    }}
+                  />
+                  <button
+                    onClick={() => coverInputRef.current?.click()}
+                    className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/50 transition-colors cursor-pointer"
+                  >
+                    {uploadCoverMutation.isPending ? (
+                      <Loader2 className="w-6 h-6 text-white animate-spin" />
+                    ) : (
+                      <div className="flex items-center gap-2 text-white">
+                        <Camera className="w-5 h-5" />
+                        <span className="text-sm font-medium">Change Cover</span>
+                      </div>
+                    )}
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">JPG, PNG or GIF. Max 5MB. Recommended: 1500×500px</p>
               </div>
 
               <Separator />

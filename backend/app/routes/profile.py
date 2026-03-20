@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from app.lib.supabase import supabase
 from app.lib.auth_helpers import check_username_availability
 from app.middleware.auth import require_auth
@@ -111,6 +111,59 @@ def update_my_profile(payload: ProfileUpdateRequest, user_id: str = Depends(requ
                 raise HTTPException(status_code=409, detail="Email already in use")
             raise HTTPException(status_code=409, detail="Username already taken")
         raise HTTPException(status_code=400, detail=str(e))
+
+# ==================== IMAGE UPLOADS ====================
+
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
+
+@router.post("/upload-avatar")
+async def upload_avatar(file: UploadFile = File(...), user_id: str = Depends(require_auth)):
+    """Upload a profile avatar image to Supabase Storage and update the user's avatar_url"""
+    if file.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(status_code=400, detail="Only JPEG, PNG, WebP and GIF images are allowed")
+    contents = await file.read()
+    if len(contents) > MAX_IMAGE_SIZE:
+        raise HTTPException(status_code=400, detail="Image must be smaller than 5 MB")
+    ext = file.filename.rsplit(".", 1)[-1].lower() if file.filename and "." in file.filename else "jpg"
+    path = f"{user_id}/avatar.{ext}"
+    try:
+        # upsert=True replaces existing file
+        supabase.storage.from_("avatars").upload(path, contents, {"content-type": file.content_type, "upsert": "true"})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Storage upload failed: {str(e)}")
+    public_url = supabase.storage.from_("avatars").get_public_url(path)
+    # append cache-bust so the browser refreshes the image
+    import time
+    public_url = f"{public_url}?t={int(time.time())}"
+    try:
+        supabase.table("users").update({"avatar_url": public_url}).eq("id", user_id).execute()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save avatar URL: {str(e)}")
+    return {"avatar_url": public_url}
+
+@router.post("/upload-cover")
+async def upload_cover(file: UploadFile = File(...), user_id: str = Depends(require_auth)):
+    """Upload a cover image to Supabase Storage and update the user's cover_url"""
+    if file.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(status_code=400, detail="Only JPEG, PNG, WebP and GIF images are allowed")
+    contents = await file.read()
+    if len(contents) > MAX_IMAGE_SIZE:
+        raise HTTPException(status_code=400, detail="Image must be smaller than 5 MB")
+    ext = file.filename.rsplit(".", 1)[-1].lower() if file.filename and "." in file.filename else "jpg"
+    path = f"{user_id}/cover.{ext}"
+    try:
+        supabase.storage.from_("covers").upload(path, contents, {"content-type": file.content_type, "upsert": "true"})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Storage upload failed: {str(e)}")
+    public_url = supabase.storage.from_("covers").get_public_url(path)
+    import time
+    public_url = f"{public_url}?t={int(time.time())}"
+    try:
+        supabase.table("users").update({"cover_url": public_url}).eq("id", user_id).execute()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save cover URL: {str(e)}")
+    return {"cover_url": public_url}
 
 @router.put("/privacy")
 def update_privacy_settings(payload: PrivacySettingsUpdate, user_id: str = Depends(require_auth)):

@@ -103,6 +103,26 @@ const profile = {
       headers: getAuthHeaders(),
       body: JSON.stringify(data),
     }).then(handleResponse),
+  uploadAvatar: (file: File): Promise<{ avatar_url: string }> => {
+    const form = new FormData();
+    form.append("file", file);
+    const token = localStorage.getItem("access_token");
+    return fetch(`${API_BASE_URL}/profile/upload-avatar`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+    }).then((r) => handleResponse(r)) as Promise<{ avatar_url: string }>;
+  },
+  uploadCover: (file: File): Promise<{ cover_url: string }> => {
+    const form = new FormData();
+    form.append("file", file);
+    const token = localStorage.getItem("access_token");
+    return fetch(`${API_BASE_URL}/profile/upload-cover`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+    }).then((r) => handleResponse(r)) as Promise<{ cover_url: string }>;
+  },
   addWorkExperience: (data: Record<string, unknown>) =>
     fetchWithAuth(`${API_BASE_URL}/profile/work-experience`, {
       method: "POST",

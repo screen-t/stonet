@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth";
 import { backendApi } from "@/lib/backend-api";
-import { EditProfileModal } from "@/components/profile/EditProfileModal";
+
 import { WorkExperienceSection } from "@/components/profile/WorkExperienceSection";
 import { EducationSection } from "@/components/profile/EducationSection";
 import { SkillsSection } from "@/components/profile/SkillsSection";
@@ -30,6 +30,7 @@ import {
   Globe,
   Check,
   X,
+  Camera,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -39,7 +40,27 @@ export const ProfilePage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadAvatarMutation = useMutation({
+    mutationFn: (file: File) => backendApi.profile.uploadAvatar(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile', profileUserId] });
+      toast({ title: "Profile photo updated!" });
+    },
+    onError: () => toast({ title: "Failed to upload photo", variant: "destructive" }),
+  });
+
+  const uploadCoverMutation = useMutation({
+    mutationFn: (file: File) => backendApi.profile.uploadCover(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile', profileUserId] });
+      toast({ title: "Cover image updated!" });
+    },
+    onError: () => toast({ title: "Failed to upload cover", variant: "destructive" }),
+  });
 
   // Determine which user profile to show
   const profileUserId = userId || user?.id;
@@ -129,7 +150,7 @@ export const ProfilePage = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative h-48 bg-gradient-to-r from-primary/20 to-primary/10 rounded-lg overflow-hidden"
+          className="relative h-48 bg-gradient-to-r from-primary/20 to-primary/10 rounded-lg overflow-hidden group"
         >
           {profile.cover_url && (
             <img
@@ -137,6 +158,34 @@ export const ProfilePage = () => {
               alt="Cover"
               className="w-full h-full object-cover"
             />
+          )}
+          {isOwnProfile && (
+            <>
+              <input
+                ref={coverInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) uploadCoverMutation.mutate(file);
+                  e.target.value = "";
+                }}
+              />
+              <button
+                onClick={() => coverInputRef.current?.click()}
+                className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+              >
+                {uploadCoverMutation.isPending ? (
+                  <Loader2 className="w-8 h-8 text-white animate-spin" />
+                ) : (
+                  <div className="flex items-center gap-2 text-white">
+                    <Camera className="w-6 h-6" />
+                    <span className="text-sm font-medium">Change Cover</span>
+                  </div>
+                )}
+              </button>
+            </>
           )}
         </motion.div>
 
@@ -149,13 +198,38 @@ export const ProfilePage = () => {
           <Card className="p-6 -mt-20 relative">
             <div className="flex flex-col md:flex-row gap-6">
               {/* Avatar */}
-              <div className="flex-shrink-0">
+              <div className="flex-shrink-0 relative group/avatar">
                 <UserAvatar
                   src={profile.avatar_url}
                   name={`${profile.first_name} ${profile.last_name}`}
                   size="xl"
                   className="border-4 border-background"
                 />
+                {isOwnProfile && (
+                  <>
+                    <input
+                      ref={avatarInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) uploadAvatarMutation.mutate(file);
+                        e.target.value = "";
+                      }}
+                    />
+                    <button
+                      onClick={() => avatarInputRef.current?.click()}
+                      className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover/avatar:opacity-100 transition-opacity cursor-pointer"
+                    >
+                      {uploadAvatarMutation.isPending ? (
+                        <Loader2 className="w-6 h-6 text-white animate-spin" />
+                      ) : (
+                        <Camera className="w-6 h-6 text-white" />
+                      )}
+                    </button>
+                  </>
+                )}
               </div>
 
               {/* Profile Info */}
@@ -215,9 +289,11 @@ export const ProfilePage = () => {
                   {/* Action Buttons */}
                   <div className="flex gap-2">
                     {isOwnProfile ? (
-                      <Button onClick={() => setIsEditModalOpen(true)} variant="outline">
-                        <Edit3 className="w-4 h-4 mr-2" />
-                        Edit Profile
+                      <Button variant="outline" asChild>
+                        <Link to="/settings">
+                          <Edit3 className="w-4 h-4 mr-2" />
+                          Edit Profile
+                        </Link>
                       </Button>
                     ) : (
                       <>
@@ -329,12 +405,7 @@ export const ProfilePage = () => {
         </Tabs>
       </div>
 
-      {/* Edit Profile Modal */}
-      <EditProfileModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        profileData={profile}
-      />
+
     </AppLayout>
   );
 };
