@@ -5,13 +5,14 @@ import { Loader2 } from "lucide-react";
 import { Post, PostsResponse } from '@/types/api';
 
 interface ProfilePostsProps {
-  userId: string;
+  username: string;
 }
 
-export const ProfilePosts = ({ userId }: ProfilePostsProps) => {
+export const ProfilePosts = ({ username }: ProfilePostsProps) => {
   const { data: postsData, isLoading, error } = useQuery<PostsResponse>({
-    queryKey: ['userPosts', userId],
-    queryFn: () => backendApi.posts.getUserPosts(userId, 50, 0),
+    queryKey: ['userPosts', username],
+    queryFn: () => backendApi.posts.getUserPosts(username, 50, 0),
+    enabled: !!username,
   });
 
   const posts = postsData?.posts || [];

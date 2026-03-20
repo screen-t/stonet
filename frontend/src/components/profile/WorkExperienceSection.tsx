@@ -16,7 +16,7 @@ import {
 import { backendApi } from "@/lib/backend-api";
 import { Briefcase, Plus, Pencil, Trash2, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 interface WorkExperienceSectionProps {
   userId: string;
@@ -101,8 +101,8 @@ export const WorkExperienceSection = ({ userId, isOwnProfile }: WorkExperienceSe
       title: item.title,
       company: item.company,
       location: item.location || "",
-      start_date: item.start_date,
-      end_date: item.end_date || "",
+      start_date: item.start_date ? item.start_date.slice(0, 7) : "",
+      end_date: item.end_date ? item.end_date.slice(0, 7) : "",
       is_current: item.is_current,
       description: item.description || "",
     });
@@ -122,7 +122,12 @@ export const WorkExperienceSection = ({ userId, isOwnProfile }: WorkExperienceSe
         return;
       }
     }
-    const payload = { ...formData, end_date: formData.is_current ? "" : formData.end_date };
+    const toFullDate = (val: string) => val ? `${val}-01` : val;
+    const payload = {
+      ...formData,
+      start_date: toFullDate(formData.start_date),
+      end_date: formData.is_current || !formData.end_date ? null : toFullDate(formData.end_date),
+    };
     saveMutation.mutate(payload);
   };
 
@@ -160,8 +165,8 @@ export const WorkExperienceSection = ({ userId, isOwnProfile }: WorkExperienceSe
                     <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
                       <Calendar className="w-3 h-3" />
                       <span>
-                        {format(new Date(exp.start_date), 'MMM yyyy')} -{" "}
-                        {exp.is_current ? "Present" : format(new Date(exp.end_date!), 'MMM yyyy')}
+                        {format(parseISO(exp.start_date), 'MMM yyyy')} -{" "}
+                        {exp.is_current ? "Present" : format(parseISO(exp.end_date!), 'MMM yyyy')}
                       </span>
                     </div>
                     {exp.description && (

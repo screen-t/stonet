@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Profile, Skill } from '@/types/api';
+import { Skill } from '@/types/api';
 import {
   Dialog,
   DialogContent,
@@ -98,7 +98,7 @@ export const SkillsSection = ({ userId, isOwnProfile }: SkillsSectionProps) => {
           ) : (
             skills.map((skill: Skill) => (
               <Badge key={skill.id} variant="secondary" className="text-sm px-3 py-1">
-                {skill.name}
+                {skill.skill}
                 {isOwnProfile && (
                   <button
                     onClick={() => deleteMutation.mutate(skill.id)}

@@ -286,22 +286,30 @@ def get_post(post_id: str, user_id: Optional[str] = Depends(require_auth)):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.get("/user/{username}", response_model=List[PostResponse])
+@router.get("/user/{identifier}", response_model=List[PostResponse])
 def get_user_posts(
-    username: str,
+    identifier: str,
     user_id: Optional[str] = Depends(require_auth),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0)
 ):
-    """Get posts by a specific user"""
+    """Get posts by a specific user (accepts username or UUID)"""
+    import re
+    uuid_pattern = re.compile(
+        r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+        re.IGNORECASE
+    )
     try:
-        # Get user ID from username
-        user = supabase.table("users").select("id").eq("username", username).single().execute()
-        if not user.data:
-            raise HTTPException(status_code=404, detail="User not found")
-        
+        if uuid_pattern.match(identifier):
+            author_id = identifier
+        else:
+            user = supabase.table("users").select("id").eq("username", identifier).single().execute()
+            if not user.data:
+                raise HTTPException(status_code=404, detail="User not found")
+            author_id = user.data["id"]
+
         # Get user's posts
-        posts = supabase.table("posts").select("*").eq("author_id", user.data["id"]).eq("is_published", True).eq("is_draft", False).order("created_at", desc=True).range(offset, offset + limit - 1).execute()
+        posts = supabase.table("posts").select("*").eq("author_id", author_id).eq("is_published", True).eq("is_draft", False).order("created_at", desc=True).range(offset, offset + limit - 1).execute()
 
         return bulk_enrich_posts(posts.data, user_id)
     except HTTPException:

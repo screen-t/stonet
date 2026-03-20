@@ -14,18 +14,29 @@ router = APIRouter(prefix="/profile", tags=["Profile"])
 
 # ==================== PROFILE CRUD ====================
 
-@router.get("/me", response_model=ProfileResponse)
+@router.get("/me")
 def get_my_profile(user_id: str = Depends(require_auth)):
-    """Get current user's profile"""
+    """Get current user's profile with nested work experience, education, and skills"""
     try:
         response = supabase.table("users").select("*").eq("id", user_id).single().execute()
-        return response.data
+        if not response.data:
+            raise HTTPException(status_code=404, detail="Profile not found")
+        profile_data = response.data
+        work_exp = supabase.table("work_experience").select("*").eq("user_id", user_id).order("start_date", desc=True).execute()
+        education = supabase.table("education").select("*").eq("user_id", user_id).order("start_date", desc=True).execute()
+        skills = supabase.table("user_skills").select("*").eq("user_id", user_id).execute()
+        profile_data["work_experience"] = work_exp.data or []
+        profile_data["education"] = education.data or []
+        profile_data["skills"] = skills.data or []
+        return profile_data
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=404, detail="Profile not found")
 
-@router.get("/{identifier}", response_model=ProfileResponse)
+@router.get("/{identifier}")
 def get_profile_by_username(identifier: str):
-    """Get user profile by username or user UUID (public)"""
+    """Get user profile by username or user UUID (public), with nested work experience, education, and skills"""
     import re
     uuid_pattern = re.compile(
         r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
@@ -38,7 +49,15 @@ def get_profile_by_username(identifier: str):
             response = supabase.table("users").select("*").eq("username", identifier).single().execute()
         if not response.data:
             raise HTTPException(status_code=404, detail="User not found")
-        return response.data
+        profile_data = response.data
+        profile_user_id = profile_data["id"]
+        work_exp = supabase.table("work_experience").select("*").eq("user_id", profile_user_id).order("start_date", desc=True).execute()
+        education = supabase.table("education").select("*").eq("user_id", profile_user_id).order("start_date", desc=True).execute()
+        skills = supabase.table("user_skills").select("*").eq("user_id", profile_user_id).execute()
+        profile_data["work_experience"] = work_exp.data or []
+        profile_data["education"] = education.data or []
+        profile_data["skills"] = skills.data or []
+        return profile_data
     except HTTPException:
         raise
     except Exception as e:
@@ -137,8 +156,12 @@ def get_user_work_experience(username: str):
 def create_work_experience(payload: WorkExperienceCreate, user_id: str = Depends(require_auth)):
     """Add work experience"""
     try:
+        from datetime import date as date_type
         data = payload.dict()
         data["user_id"] = user_id
+        for field in ("start_date", "end_date"):
+            if isinstance(data.get(field), date_type):
+                data[field] = data[field].isoformat()
         
         response = supabase.table("work_experience").insert(data).execute()
         return {"message": "Work experience added", "data": response.data[0]}
@@ -149,10 +172,18 @@ def create_work_experience(payload: WorkExperienceCreate, user_id: str = Depends
 def update_work_experience(experience_id: str, payload: WorkExperienceUpdate, user_id: str = Depends(require_auth)):
     """Update work experience"""
     try:
+        from datetime import date as date_type
         update_data = {k: v for k, v in payload.dict().items() if v is not None}
+        # When marking as current, explicitly clear end_date in the DB
+        if payload.is_current:
+            update_data["end_date"] = None
         
         if not update_data:
             raise HTTPException(status_code=400, detail="No fields to update")
+        
+        for field in ("start_date", "end_date"):
+            if isinstance(update_data.get(field), date_type):
+                update_data[field] = update_data[field].isoformat()
         
         # Verify ownership
         check = supabase.table("work_experience").select("user_id").eq("id", experience_id).single().execute()
@@ -211,8 +242,12 @@ def get_user_education(username: str):
 def create_education(payload: EducationCreate, user_id: str = Depends(require_auth)):
     """Add education"""
     try:
+        from datetime import date as date_type
         data = payload.dict()
         data["user_id"] = user_id
+        for field in ("start_date", "end_date"):
+            if isinstance(data.get(field), date_type):
+                data[field] = data[field].isoformat()
         
         response = supabase.table("education").insert(data).execute()
         return {"message": "Education added", "data": response.data[0]}
@@ -223,10 +258,18 @@ def create_education(payload: EducationCreate, user_id: str = Depends(require_au
 def update_education(education_id: str, payload: EducationUpdate, user_id: str = Depends(require_auth)):
     """Update education"""
     try:
+        from datetime import date as date_type
         update_data = {k: v for k, v in payload.dict().items() if v is not None}
+        # When marking as current, explicitly clear end_date in the DB
+        if payload.is_current:
+            update_data["end_date"] = None
         
         if not update_data:
             raise HTTPException(status_code=400, detail="No fields to update")
+        
+        for field in ("start_date", "end_date"):
+            if isinstance(update_data.get(field), date_type):
+                update_data[field] = update_data[field].isoformat()
         
         # Verify ownership
         check = supabase.table("education").select("user_id").eq("id", education_id).single().execute()

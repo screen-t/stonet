@@ -61,7 +61,7 @@ export interface Education {
 export interface Skill {
   id: string;
   user_id: string;
-  name: string;
+  skill: string;
   created_at: string;
 }
 

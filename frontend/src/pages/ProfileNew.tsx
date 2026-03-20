@@ -316,7 +316,7 @@ export const ProfilePage = () => {
           </TabsContent>
 
           <TabsContent value="posts">
-            <ProfilePosts userId={profileUserId!} />
+            <ProfilePosts username={profile.username} />
           </TabsContent>
 
           <TabsContent value="experience">
