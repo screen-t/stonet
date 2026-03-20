@@ -1,94 +1,63 @@
+import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { Bookmark, FileText, Briefcase, Users } from "lucide-react";
+import { Bookmark, Loader2 } from "lucide-react";
+import { backendApi } from "@/lib/backend-api";
+import { PostCardNew } from "@/components/feed/PostCardNew";
+import { Post } from "@/types/api";
 
 const Saved = () => {
+  const { data: posts, isLoading, error } = useQuery<Post[]>({
+    queryKey: ["savedPosts"],
+    queryFn: () => backendApi.posts.getSavedPosts(50, 0),
+  });
+
   return (
     <AppLayout>
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-4 px-2">
         {/* Header */}
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold">Saved Items</h1>
-          <p className="text-muted-foreground">
-            Access your bookmarked posts, articles, and connections.
+        <div className="space-y-1 pt-2">
+          <h1 className="text-2xl font-bold">Saved Posts</h1>
+          <p className="text-sm text-muted-foreground">
+            Posts you've bookmarked for later.
           </p>
         </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="posts" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="posts">Posts</TabsTrigger>
-            <TabsTrigger value="articles">Articles</TabsTrigger>
-            <TabsTrigger value="jobs">Jobs</TabsTrigger>
-            <TabsTrigger value="people">People</TabsTrigger>
-          </TabsList>
+        {isLoading && (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
 
-          <TabsContent value="posts" className="mt-6">
-            <Card className="p-12 text-center">
-              <div className="max-w-md mx-auto space-y-4">
-                <div className="flex justify-center">
-                  <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Bookmark className="h-10 w-10 text-primary" />
-                  </div>
-                </div>
-                <h2 className="text-2xl font-bold">No Saved Posts</h2>
-                <p className="text-muted-foreground">
-                  Save posts you want to read later by clicking the bookmark icon.
-                  They'll appear here for easy access.
-                </p>
-              </div>
-            </Card>
-          </TabsContent>
+        {error && (
+          <Card className="p-8 text-center">
+            <p className="text-muted-foreground">Failed to load saved posts.</p>
+          </Card>
+        )}
 
-          <TabsContent value="articles" className="mt-6">
-            <Card className="p-12 text-center">
-              <div className="max-w-md mx-auto space-y-4">
-                <div className="flex justify-center">
-                  <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
-                    <FileText className="h-10 w-10 text-primary" />
-                  </div>
+        {!isLoading && !error && posts?.length === 0 && (
+          <Card className="p-12 text-center">
+            <div className="max-w-md mx-auto space-y-4">
+              <div className="flex justify-center">
+                <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Bookmark className="h-10 w-10 text-primary" />
                 </div>
-                <h2 className="text-2xl font-bold">No Saved Articles</h2>
-                <p className="text-muted-foreground">
-                  Bookmark articles and resources to build your reading list.
-                </p>
               </div>
-            </Card>
-          </TabsContent>
+              <h2 className="text-2xl font-bold">No Saved Posts</h2>
+              <p className="text-muted-foreground">
+                Save posts you want to read later by clicking the bookmark icon on any post.
+              </p>
+            </div>
+          </Card>
+        )}
 
-          <TabsContent value="jobs" className="mt-6">
-            <Card className="p-12 text-center">
-              <div className="max-w-md mx-auto space-y-4">
-                <div className="flex justify-center">
-                  <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Briefcase className="h-10 w-10 text-primary" />
-                  </div>
-                </div>
-                <h2 className="text-2xl font-bold">No Saved Jobs</h2>
-                <p className="text-muted-foreground">
-                  Save job postings you're interested in and come back to them later.
-                </p>
-              </div>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="people" className="mt-6">
-            <Card className="p-12 text-center">
-              <div className="max-w-md mx-auto space-y-4">
-                <div className="flex justify-center">
-                  <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Users className="h-10 w-10 text-primary" />
-                  </div>
-                </div>
-                <h2 className="text-2xl font-bold">No Saved Profiles</h2>
-                <p className="text-muted-foreground">
-                  Save profiles of people you want to reconnect with or follow up later.
-                </p>
-              </div>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        {!isLoading && posts && posts.length > 0 && (
+          <div className="space-y-4 pb-20">
+            {posts.map((post: Post) => (
+              <PostCardNew key={post.id} post={post} />
+            ))}
+          </div>
+        )}
       </div>
     </AppLayout>
   );

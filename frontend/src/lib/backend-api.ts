@@ -242,6 +242,13 @@ const posts = {
       method: "DELETE",
       headers: getAuthHeaders(),
     }).then(handleResponse),
+  getSavedPosts: async (limit: number, offset: number): Promise<import('@/types/api').Post[]> => {
+    const list = await fetchWithAuth(
+      `${API_BASE_URL}/posts/saved/all?limit=${limit}&offset=${offset}`,
+      { headers: getAuthHeaders() }
+    ).then(handleResponse<import('@/types/api').Post[]>);
+    return Array.isArray(list) ? list : [];
+  },
   getComments: async (postId: string, limit: number, offset: number): Promise<import('@/types/api').CommentsResponse> => {
     const raw = await fetchWithAuth(
       `${API_BASE_URL}/posts/${postId}/comments?limit=${limit}&offset=${offset}`,

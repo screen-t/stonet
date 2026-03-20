@@ -148,6 +148,22 @@ export const PostCardNew = ({ post }: PostCardNewProps) => {
     },
   });
 
+  // Save mutation
+  const saveMutation = useMutation({
+    mutationFn: (currentlySaved: boolean) =>
+      currentlySaved
+        ? backendApi.posts.unsavePost(post.id)
+        : backendApi.posts.savePost(post.id),
+    onSuccess: (_data, currentlySaved) => {
+      toast({ title: currentlySaved ? "Post unsaved" : "Post saved!" });
+      queryClient.invalidateQueries({ queryKey: ['feed'] });
+      queryClient.invalidateQueries({ queryKey: ['savedPosts'] });
+    },
+    onError: () => {
+      toast({ title: "Failed to save post", variant: "destructive" });
+    },
+  });
+
   // Repost mutation
   const repostMutation = useMutation({
     mutationFn: async () => {
@@ -584,8 +600,17 @@ export const PostCardNew = ({ post }: PostCardNewProps) => {
           <span>{post.repost_count ?? post.reposts_count ?? 0}</span>
         </Button>
 
-        <Button variant="ghost" size="sm" className="gap-2">
+        <Button variant="ghost" size="sm" onClick={handleCopyLink} className="gap-2">
           <Share2 className="h-4 w-4" />
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => !saveMutation.isPending && saveMutation.mutate(post.is_saved ?? false)}
+          className={cn("gap-2 transition-colors", post.is_saved && "text-primary")}
+        >
+          <Bookmark className={cn("h-4 w-4 transition-all", post.is_saved && "fill-current")} />
         </Button>
       </div>
 
