@@ -114,8 +114,19 @@ export const PostCardNew = ({ post }: PostCardNewProps) => {
       }
       toast({ title: "Failed to update like", variant: "destructive" });
     },
-    onSettled: () => {
-      // Silently sync with server after optimistic update is already shown
+    onSettled: (_data) => {
+      // If the server returned a confirmed like_count, patch the cache directly.
+      // This avoids the window where a refetch returns a stale DB value.
+      const serverCount: number | null | undefined = (_data as any)?.like_count;
+      if (typeof serverCount === 'number') {
+        queryClient.setQueriesData<Post[]>({ queryKey: ['feed'] }, (old) => {
+          if (!Array.isArray(old)) return old;
+          return old.map((p) =>
+            p.id === post.id ? { ...p, like_count: serverCount } : p
+          );
+        });
+      }
+      // Always follow up with a background sync so the feed stays fresh
       queryClient.invalidateQueries({ queryKey: ['feed'] });
     },
   });

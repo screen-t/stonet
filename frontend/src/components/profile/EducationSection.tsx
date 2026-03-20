@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Profile, Education } from '@/types/api';
+import { Education } from '@/types/api';
 import {
   Dialog,
   DialogContent,
@@ -119,7 +119,14 @@ export const EducationSection = ({ userId, isOwnProfile }: EducationSectionProps
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    saveMutation.mutate(formData);
+    if (!formData.is_current && formData.end_date && formData.start_date) {
+      if (formData.end_date < formData.start_date) {
+        toast({ title: "End date must be after start date", variant: "destructive" });
+        return;
+      }
+    }
+    const payload = { ...formData, end_date: formData.is_current ? "" : formData.end_date };
+    saveMutation.mutate(payload);
   };
 
   return (
@@ -262,7 +269,7 @@ export const EducationSection = ({ userId, isOwnProfile }: EducationSectionProps
                 type="checkbox"
                 id="is_current"
                 checked={formData.is_current}
-                onChange={(e) => setFormData({ ...formData, is_current: e.target.checked })}
+                onChange={(e) => setFormData({ ...formData, is_current: e.target.checked, end_date: e.target.checked ? "" : formData.end_date })}
               />
               <Label htmlFor="is_current">I currently study here</Label>
             </div>

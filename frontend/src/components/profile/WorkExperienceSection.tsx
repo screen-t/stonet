@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Profile, WorkExperience } from '@/types/api';
+import { WorkExperience } from '@/types/api';
 import {
   Dialog,
   DialogContent,
@@ -116,7 +116,14 @@ export const WorkExperienceSection = ({ userId, isOwnProfile }: WorkExperienceSe
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    saveMutation.mutate(formData);
+    if (!formData.is_current && formData.end_date && formData.start_date) {
+      if (formData.end_date < formData.start_date) {
+        toast({ title: "End date must be after start date", variant: "destructive" });
+        return;
+      }
+    }
+    const payload = { ...formData, end_date: formData.is_current ? "" : formData.end_date };
+    saveMutation.mutate(payload);
   };
 
   return (
@@ -255,7 +262,7 @@ export const WorkExperienceSection = ({ userId, isOwnProfile }: WorkExperienceSe
                 type="checkbox"
                 id="is_current"
                 checked={formData.is_current}
-                onChange={(e) => setFormData({ ...formData, is_current: e.target.checked })}
+                onChange={(e) => setFormData({ ...formData, is_current: e.target.checked, end_date: e.target.checked ? "" : formData.end_date })}
               />
               <Label htmlFor="is_current">I currently work here</Label>
             </div>

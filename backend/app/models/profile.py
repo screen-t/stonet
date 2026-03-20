@@ -84,27 +84,44 @@ class ProfileResponse(BaseModel):
 
 # Work Experience Models
 class WorkExperienceCreate(BaseModel):
+    title: str
     company: str
-    position: str
+    location: Optional[str] = None
     start_date: date
     end_date: Optional[date] = None
+    is_current: bool = False
+    is_remote: bool = False
     description: Optional[str] = Field(None, max_length=1000)
 
+    @validator('end_date')
+    def end_date_after_start(cls, v, values):
+        if v and 'start_date' in values and values['start_date'] and v < values['start_date']:
+            raise ValueError('End date must be after start date')
+        return v
+
 class WorkExperienceUpdate(BaseModel):
+    title: Optional[str] = None
     company: Optional[str] = None
-    position: Optional[str] = None
+    location: Optional[str] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None
+    is_current: Optional[bool] = None
+    is_remote: Optional[bool] = None
     description: Optional[str] = Field(None, max_length=1000)
 
 class WorkExperienceResponse(BaseModel):
     id: str
     user_id: str
+    title: Optional[str]
     company: str
-    position: str
+    location: Optional[str]
     start_date: date
     end_date: Optional[date]
+    is_current: bool
+    is_remote: bool
     description: Optional[str]
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
 
 # Education Models
 class EducationCreate(BaseModel):
@@ -113,6 +130,15 @@ class EducationCreate(BaseModel):
     field_of_study: Optional[str] = None
     start_date: date
     end_date: Optional[date] = None
+    is_current: bool = False
+    grade: Optional[str] = None
+    description: Optional[str] = Field(None, max_length=1000)
+
+    @validator('end_date')
+    def end_date_after_start(cls, v, values):
+        if v and 'start_date' in values and values['start_date'] and v < values['start_date']:
+            raise ValueError('End date must be after start date')
+        return v
 
 class EducationUpdate(BaseModel):
     institution: Optional[str] = None
@@ -120,6 +146,9 @@ class EducationUpdate(BaseModel):
     field_of_study: Optional[str] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None
+    is_current: Optional[bool] = None
+    grade: Optional[str] = None
+    description: Optional[str] = Field(None, max_length=1000)
 
 class EducationResponse(BaseModel):
     id: str
@@ -129,6 +158,11 @@ class EducationResponse(BaseModel):
     field_of_study: Optional[str]
     start_date: date
     end_date: Optional[date]
+    is_current: bool
+    grade: Optional[str]
+    description: Optional[str]
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
 
 # User Skills Models
 class SkillCreate(BaseModel):

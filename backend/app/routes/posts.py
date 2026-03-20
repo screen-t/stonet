@@ -380,30 +380,37 @@ def like_post(post_id: str, user_id: str = Depends(require_auth)):
     """Like a post"""
     ensure_user_exists(user_id)
     try:
-        # Insert like
+        # Insert like (ignore if already liked)
         supabase.table("post_likes").insert({"post_id": post_id, "user_id": user_id}).execute()
-        
-        # Increment like count
-        supabase.rpc("increment_post_likes", {"post_id": post_id}).execute()
-        
-        return {"message": "Post liked"}
     except Exception as e:
         if "duplicate" in str(e).lower() or "unique" in str(e).lower():
             raise HTTPException(status_code=409, detail="Already liked")
         raise HTTPException(status_code=400, detail=str(e))
+    try:
+        # Recalculate exact count from source of truth — avoids silent RPC/RLS failures
+        count_resp = supabase.table("post_likes").select("post_id", count="exact").eq("post_id", post_id).execute()
+        exact_count = count_resp.count or 0
+        supabase.table("posts").update({"like_count": exact_count}).eq("id", post_id).execute()
+        return {"message": "Post liked", "like_count": exact_count}
+    except Exception as e:
+        # Like was recorded; count sync failed — non-fatal, return best-effort
+        return {"message": "Post liked", "like_count": None}
 
 @router.delete("/{post_id}/like")
 def unlike_post(post_id: str, user_id: str = Depends(require_auth)):
     """Unlike a post"""
     try:
         supabase.table("post_likes").delete().eq("post_id", post_id).eq("user_id", user_id).execute()
-        
-        # Decrement like count
-        supabase.rpc("decrement_post_likes", {"post_id": post_id}).execute()
-        
-        return {"message": "Post unliked"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    try:
+        # Recalculate exact count from source of truth
+        count_resp = supabase.table("post_likes").select("post_id", count="exact").eq("post_id", post_id).execute()
+        exact_count = count_resp.count or 0
+        supabase.table("posts").update({"like_count": exact_count}).eq("id", post_id).execute()
+        return {"message": "Post unliked", "like_count": exact_count}
+    except Exception as e:
+        return {"message": "Post unliked", "like_count": None}
 
 @router.post("/{post_id}/repost")
 def repost(post_id: str, user_id: str = Depends(require_auth)):
