@@ -18,7 +18,7 @@ import {
   Search,
   Bell,
   MessageSquare,
-  PlusCircle,
+  Plus,
   Settings,
   LogOut,
   User,
@@ -123,7 +123,7 @@ export const Navbar = ({ isAuthenticated = false }: NavbarProps) => {
                 className="gap-2"
                 onClick={() => setIsCreatePostOpen(true)}
               >
-                <PlusCircle className="h-4 w-4" />
+                <Plus className="!h-7 !w-7" />
                 Create Post
               </Button>
               <DropdownMenu>
@@ -177,15 +177,26 @@ export const Navbar = ({ isAuthenticated = false }: NavbarProps) => {
             </div>
           )}
 
-          {/* Mobile Menu Toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
+          {/* Mobile Actions */}
+          <div className="flex items-center md:hidden">
+            {isAuthenticated && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsCreatePostOpen(true)}
+                aria-label="Create post"
+              >
+                <Plus className="h-6 w-6 text-primary" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -269,7 +280,7 @@ export const Navbar = ({ isAuthenticated = false }: NavbarProps) => {
                     className="w-full gap-2"
                     onClick={() => { setIsCreatePostOpen(true); setIsMobileMenuOpen(false); }}
                   >
-                    <PlusCircle className="h-4 w-4" />
+                    <Plus className="h-5 w-5" />
                     Create Post
                   </Button>
 
