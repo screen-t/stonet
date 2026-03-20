@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { PostCardNew } from "@/components/feed/PostCardNew";
 import { backendApi } from "@/lib/backend-api";
-import { SearchResponse } from '@/types/api';
+import { SearchResponse, User, Post } from '@/types/api';
 import {
   Search as SearchIcon,
   Users,
@@ -62,7 +62,7 @@ const SearchPage = () => {
 
   const isLoading = loadingAll || loadingUsers || loadingPosts;
 
-  const renderUserCard = (user: any) => (
+  const renderUserCard = (user: User) => (
     <Card key={user.id} className="p-4">
       <div className="flex items-start gap-3">
         <Link to={`/profile/${user.id}`}>
@@ -179,7 +179,7 @@ const SearchPage = () => {
                         </Button>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {allResults.users.slice(0, 4).map((user: any) => renderUserCard(user))}
+                        {allResults.users.slice(0, 4).map((user: User) => renderUserCard(user))}
                       </div>
                     </div>
                   )}
@@ -201,7 +201,7 @@ const SearchPage = () => {
                         </Button>
                       </div>
                       <div className="space-y-4">
-                        {allResults.posts.slice(0, 3).map((post: any) => (
+                        {allResults.posts.slice(0, 3).map((post: Post) => (
                           <PostCardNew key={post.id} post={post} />
                         ))}
                       </div>
@@ -223,7 +223,7 @@ const SearchPage = () => {
                 </div>
               ) : usersResults?.users && usersResults.users.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {usersResults.users.map((user: any, index: number) => (
+                  {usersResults.users.map((user: User, index: number) => (
                     <motion.div
                       key={user.id}
                       initial={{ opacity: 0, y: 20 }}
@@ -247,7 +247,7 @@ const SearchPage = () => {
                 </div>
               ) : postsResults?.posts && postsResults.posts.length > 0 ? (
                 <div className="space-y-4">
-                  {postsResults.posts.map((post: any, index: number) => (
+                  {postsResults.posts.map((post: Post, index: number) => (
                     <motion.div
                       key={post.id}
                       initial={{ opacity: 0, y: 20 }}

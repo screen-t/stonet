@@ -127,14 +127,14 @@ const MessagesNew = () => {
   };
 
   // Filter conversations by search
-  const filteredConversations = conversations.filter((conv: any) =>
+  const filteredConversations = conversations.filter((conv) =>
     `${conv.user?.first_name} ${conv.user?.last_name}`
       .toLowerCase()
       .includes(searchQuery.toLowerCase())
   );
 
   // Get current conversation user details
-  const currentConversation = conversations.find((conv: any) => conv.user?.id === userId);
+  const currentConversation = conversations.find((conv) => conv.user?.id === userId);
   const otherUserFromConversations = currentConversation?.user;
 
   // If userId is set but not in conversations yet (new conversation), fetch their profile
@@ -184,7 +184,7 @@ const MessagesNew = () => {
               </div>
             ) : (
               <div>
-                {filteredConversations.map((conversation: any) => (
+                {filteredConversations.map((conversation) => (
                   <motion.button
                     key={conversation.id}
                     onClick={() => handleSelectConversation(conversation.user?.id)}
@@ -290,7 +290,7 @@ const MessagesNew = () => {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {messages.map((message: any, index: number) => {
+                    {messages.map((message, index: number) => {
                       const isMyMessage = message.sender_id === user?.id;
                       const showAvatar =
                         index === 0 ||

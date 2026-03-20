@@ -29,8 +29,8 @@ const Login = () => {
 
   const { login } = useAuth()
   const navigate = useNavigate()
-  const location = useLocation() as any
-  const from = location?.state?.from?.pathname || '/feed'
+  const location = useLocation()
+  const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/feed'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,14 +41,14 @@ const Login = () => {
       await login(email, password)
       // navigate back to original path or /feed
       navigate(from, { replace: true })
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Login error:", err)
       
       // Handle specific error messages from backend
       let errorMessage = 'Login failed. Please try again.'
-      
-      if (err.message) {
-        const msg = err.message.toLowerCase()
+      const message = err instanceof Error ? err.message : ''
+      if (message) {
+        const msg = message.toLowerCase()
         
         if (msg.includes('invalid email or password')) {
           errorMessage = 'Invalid email or password. Please check your credentials and try again.'
@@ -62,7 +62,7 @@ const Login = () => {
           errorMessage = 'Connection error. Please refresh the page and try again.'
         } else {
           // Use the original error message if it's user-friendly
-          errorMessage = err.message
+          errorMessage = message
         }
       }
       

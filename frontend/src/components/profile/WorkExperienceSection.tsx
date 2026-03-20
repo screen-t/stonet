@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { WorkExperience } from '@/types/api';
+import { WorkExperience, Profile } from '@/types/api';
 import {
   Dialog,
   DialogContent,
@@ -45,13 +45,13 @@ export const WorkExperienceSection = ({ userId, isOwnProfile }: WorkExperienceSe
       const profile = isOwnProfile
         ? await backendApi.profile.getMyProfile()
         : await backendApi.profile.getProfile(userId);
-      return (profile as any).work_experience || [];
+      return (profile as Profile).work_experience || [];
     },
   });
 
   // Add/Update work experience
   const saveMutation = useMutation({
-    mutationFn: (data: any) => {
+    mutationFn: (data: Record<string, unknown>) => {
       if (editingItem) {
         return backendApi.profile.updateWorkExperience(editingItem.id, data);
       }

@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
-import { Post, CommentsResponse } from '@/types/api';
+import { Post, Comment, CommentsResponse } from '@/types/api';
 import {
   Heart,
   MessageCircle,
@@ -117,7 +117,7 @@ export const PostCardNew = ({ post }: PostCardNewProps) => {
     onSettled: (_data) => {
       // If the server returned a confirmed like_count, patch the cache directly.
       // This avoids the window where a refetch returns a stale DB value.
-      const serverCount: number | null | undefined = (_data as any)?.like_count;
+      const serverCount: number | null | undefined = (_data as { like_count?: number })?.like_count;
       if (typeof serverCount === 'number') {
         queryClient.setQueriesData<Post[]>({ queryKey: ['feed'] }, (old) => {
           if (!Array.isArray(old)) return old;
@@ -314,7 +314,7 @@ export const PostCardNew = ({ post }: PostCardNewProps) => {
     updatePostMutation.mutate(payload);
   };
 
-  const handleEditFileSelect = async (e: any) => {
+  const handleEditFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target as HTMLInputElement;
     const files = Array.from(input.files || []) as File[];
     if (!files.length) return;
@@ -337,10 +337,10 @@ export const PostCardNew = ({ post }: PostCardNewProps) => {
 
       setEditMediaUrls((prev) => [...prev, ...uploaded]);
       toast({ title: `${uploaded.length} file(s) uploaded` });
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Upload failed",
-        description: err.message ?? "Could not upload file",
+        description: (err as Error).message ?? "Could not upload file",
         variant: "destructive",
       });
     } finally {
@@ -450,9 +450,9 @@ export const PostCardNew = ({ post }: PostCardNewProps) => {
         // Backend returns media as an array of objects: [{ url, media_type, ... }]
         // but the Post type also has a legacy media_urls string array — support both.
         const mediaItems: Array<{ url: string; media_type?: string }> =
-          (post as any).media?.length
-            ? (post as any).media
-            : (post.media_urls ?? []).map((u: string) => ({ url: u }));
+          (post.media?.length
+            ? post.media
+            : (post.media_urls ?? []).map((u: string) => ({ url: u })));
         if (!mediaItems.length) return null;
         return (
           <div className="mb-4 space-y-2">
@@ -482,7 +482,7 @@ export const PostCardNew = ({ post }: PostCardNewProps) => {
       {(() => {
         // Backend returns poll as: { id, question, ends_at, options: [{ id, option_text, vote_count, display_order }], user_vote: <option_id> | null }
         // Legacy shape: post.poll_options (string[]) with post.poll_votes / post.total_votes
-        const pollObj = (post as any).poll as { id?: string; question?: string; options?: Array<{ id: string; option_text: string; vote_count: number; display_order: number }>; user_vote?: string | null } | undefined;
+        const pollObj = post.poll as { id?: string; question?: string; options?: Array<{ id: string; option_text: string; vote_count: number; display_order: number }>; user_vote?: string | null } | undefined;
         const legacyOptions = post.poll_options;
 
         if (pollObj?.options?.length) {
@@ -636,7 +636,7 @@ export const PostCardNew = ({ post }: PostCardNewProps) => {
           </div>
 
           {/* Comments List */}
-          {comments.map((comment: any) => (
+          {comments.map((comment: Comment) => (
             <div key={comment.id} className="flex gap-2 text-sm">
               <UserAvatar
                 src={comment.author?.avatar_url}

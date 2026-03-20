@@ -131,7 +131,7 @@ const Feed = () => {
   };
 
   // Map backend posts to PostData format
-  const posts: PostData[] = postsData?.map((post: any) => {
+  const posts: PostData[] = postsData?.map((post) => {
     const firstName = post.author?.first_name || '';
     const lastName = post.author?.last_name || '';
     const fullName = [firstName, lastName].filter(Boolean).join(' ');

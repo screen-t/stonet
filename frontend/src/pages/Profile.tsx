@@ -318,23 +318,10 @@ export const Profile = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                {true ? (
-                  <Button variant="outline" className="gap-2" onClick={() => setIsEditing(true)}>
-                    <Edit3 className="h-4 w-4" />
-                    Edit Profile
-                  </Button>
-                ) : (
-                  <>
-                    <Button className="gap-2">
-                      <UserPlus className="h-4 w-4" />
-                      Connect
-                    </Button>
-                    <Button variant="outline" className="gap-2">
-                      <MessageSquare className="h-4 w-4" />
-                      Message
-                    </Button>
-                  </>
-                )}
+                <Button variant="outline" className="gap-2" onClick={() => setIsEditing(true)}>
+                  <Edit3 className="h-4 w-4" />
+                  Edit Profile
+                </Button>
               </div>
             </div>
           </div>

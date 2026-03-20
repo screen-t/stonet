@@ -21,8 +21,8 @@ const ForgotPassword = () => {
     try {
       await (await import('../lib/api')).authApi.forgotPassword({ email })
       setMessage('If that email exists in our system, we\'ve sent you a reset link. Please check your inbox and spam folder.')
-    } catch (err: any) {
-      setError(err.message || 'Failed to send reset link. Please try again.')
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Failed to send reset link. Please try again.')
     } finally {
       setLoading(false)
     }

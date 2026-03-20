@@ -63,8 +63,8 @@ const Signup = () => {
       } else if (provider === 'linkedin') {
         await authApi.linkedinOAuth()
       }
-    } catch (err: any) {
-      setError(err?.message || `${provider} signup failed`)
+    } catch (err: unknown) {
+      setError((err as Error)?.message || `${provider} signup failed`)
       setOauthLoading(null)
     }
   };
@@ -131,8 +131,8 @@ const Signup = () => {
       })
 
       window.location.href = '/onboarding'
-    } catch (err: any) {
-      setError(err?.message || 'Signup failed')
+    } catch (err: unknown) {
+      setError((err as Error)?.message || 'Signup failed')
     } finally {
       setLoading(false)
     }

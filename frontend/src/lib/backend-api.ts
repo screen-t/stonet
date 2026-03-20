@@ -293,7 +293,7 @@ const connections = {
       { headers: getAuthHeaders() }
     ).then(async (res) => {
       const data = await handleResponse<unknown[]>(res);
-      const list: any[] = Array.isArray(data) ? data : [];
+      const list: import('@/types/api').Connection[] = Array.isArray(data) ? (data as import('@/types/api').Connection[]) : [];
       return { connections: list };
     }) as Promise<import('@/types/api').ConnectionsResponse>,
   getConnectionStatus: (userId: string) =>
@@ -321,8 +321,8 @@ const connections = {
     fetchWithAuth(`${API_BASE_URL}/connections/suggestions?limit=${limit}`, {
       headers: getAuthHeaders(),
     }).then(async (res) => {
-      const data = await handleResponse<any>(res);
-      const suggestions: import('@/types/api').User[] = Array.isArray(data) ? data : (data?.suggestions ?? []);
+      const data = await handleResponse<unknown>(res);
+      const suggestions: import('@/types/api').User[] = Array.isArray(data) ? data : ((data as { suggestions?: import('@/types/api').User[] })?.suggestions ?? []);
       return { suggestions };
     }) as Promise<import('@/types/api').SuggestionsResponse>,
 };
@@ -343,7 +343,7 @@ const messages = {
   getConversations: async (_limit?: number, _offset?: number) => {
     const list = await fetchWithAuth(`${API_BASE_URL}/messages/conversations`, {
       headers: getAuthHeaders(),
-    }).then(handleResponse<any[]>);
+    }).then(handleResponse<import('@/types/api').Conversation[]>);
     return { conversations: Array.isArray(list) ? list : [] } as import('@/types/api').ConversationsResponse;
   },
   getMessages: async (otherUserId: string, limit: number, offset: number) => {
@@ -352,7 +352,7 @@ const messages = {
     const list = await fetchWithAuth(
       `${API_BASE_URL}/messages/conversations/${conv.id}/messages?limit=${limit}&offset=${offset}`,
       { headers: getAuthHeaders() }
-    ).then(handleResponse<any[]>);
+    ).then(handleResponse<import('@/types/api').Message[]>);
     return { messages: Array.isArray(list) ? list : [] } as import('@/types/api').MessagesResponse;
   },
   sendMessage: (recipientId: string, content: string) =>

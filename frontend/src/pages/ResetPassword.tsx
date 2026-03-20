@@ -53,8 +53,8 @@ const ResetPassword = () => {
       })
       setMessage('Password updated successfully! Redirecting to login...')
       setTimeout(() => navigate('/login'), 2000)
-    } catch (err: any) {
-      setError(err.message || 'Failed to reset password. Please try again.')
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Failed to reset password. Please try again.')
     } finally {
       setLoading(false)
     }

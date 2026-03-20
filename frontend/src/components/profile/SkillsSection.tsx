@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Skill } from '@/types/api';
+import { Skill, Profile } from '@/types/api';
 import {
   Dialog,
   DialogContent,
@@ -35,7 +35,7 @@ export const SkillsSection = ({ userId, isOwnProfile }: SkillsSectionProps) => {
       const profile = isOwnProfile
         ? await backendApi.profile.getMyProfile()
         : await backendApi.profile.getProfile(userId);
-      return (profile as any).skills || [];
+      return (profile as Profile).skills || [];
     },
   });
 

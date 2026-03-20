@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { useNavigate, Navigate, useLocation } from 'react-router-dom'
 import { authApi } from './api'
+import type { SignupPayload } from './api'
 import { User } from '@/types/api'
 import { AuthContext, AuthContextValue } from './auth-context'
 
@@ -80,7 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
-  const signup = async (payload: any) => {
+  const signup = async (payload: SignupPayload) => {
     setLoading(true)
     try {
       const res = await authApi.signup(payload)

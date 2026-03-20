@@ -1,11 +1,12 @@
 import { createContext } from 'react'
 import { User } from '@/types/api'
+import type { SignupPayload } from './api'
 
 export type AuthContextValue = {
   user: User | null
   loading: boolean
   login: (email: string, password: string) => Promise<void>
-  signup: (payload: any) => Promise<void>
+  signup: (payload: SignupPayload) => Promise<void>
   logout: () => Promise<void>
   refreshSession: () => Promise<void>
   refreshUser: () => Promise<void>

@@ -72,10 +72,10 @@ export const CreatePostModalNew = ({
       }
       setMediaUrls((prev) => [...prev, ...uploaded]);
       toast({ title: `${uploaded.length} file(s) uploaded` });
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Upload failed",
-        description: err.message ?? "Could not upload file",
+        description: (err as Error).message ?? "Could not upload file",
         variant: "destructive",
       });
     } finally {
@@ -106,7 +106,7 @@ export const CreatePostModalNew = ({
       onClose();
       onPostCreated?.();
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         title: "Failed to create post",
         description: error.message,
@@ -129,7 +129,14 @@ export const CreatePostModalNew = ({
       return;
     }
 
-    const postData: any = {
+    const postData: {
+      content: string;
+      post_type: string;
+      visibility: string;
+      is_draft: boolean;
+      media?: Array<{ url: string; media_type: string; thumbnail_url: null }>;
+      poll?: { question: string; options: Array<{ option_text: string; display_order: number }>; ends_at: string };
+    } = {
       content: content.trim(),
       post_type: "text",
       visibility: "public",
@@ -201,14 +208,14 @@ export const CreatePostModalNew = ({
           {/* User Info */}
           <div className="flex items-center gap-3">
             <UserAvatar
-              src={(user as any)?.avatar_url}
-              name={`${(user as any)?.first_name ?? ""} ${(user as any)?.last_name ?? user?.email ?? "User"}`.trim()}
+              src={user?.avatar_url}
+              name={`${user?.first_name ?? ""} ${user?.last_name ?? user?.email ?? "User"}`.trim()}
               size="md"
             />
             <div>
               <p className="font-semibold">
-                {(user as any)?.first_name
-                  ? `${(user as any).first_name} ${(user as any).last_name ?? ""}`.trim()
+                {user?.first_name
+                  ? `${user.first_name} ${user.last_name ?? ""}`.trim()
                   : user?.email}
               </p>
               <p className="text-xs text-muted-foreground">Post to Public</p>

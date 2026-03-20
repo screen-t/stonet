@@ -162,6 +162,7 @@ export interface Notification {
   user_id: string;
   type: 'like' | 'comment' | 'connection_request' | 'connection_accepted' | 'repost' | 'mention';
   content: string;
+  message?: string;
   is_read: boolean;
   actor_id?: string;
   post_id?: string;
@@ -169,6 +170,7 @@ export interface Notification {
   connection_id?: string;
   created_at: string;
   actor?: User;
+  post_preview?: string;
 }
 
 // API Response wrappers

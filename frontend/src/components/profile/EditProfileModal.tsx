@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { backendApi } from "@/lib/backend-api";
+import { Profile } from "@/types/api";
 import {
   Dialog,
   DialogContent,
@@ -44,7 +45,7 @@ import {
 interface EditProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
-  profileData?: any;
+  profileData?: Profile;
 }
 
 export const EditProfileModal = ({

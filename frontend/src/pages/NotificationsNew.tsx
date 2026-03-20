@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { backendApi } from "@/lib/backend-api";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
-import { NotificationsResponse } from '@/types/api';
+import { Notification, NotificationsResponse } from '@/types/api';
 import {
   Heart,
   MessageCircle,
@@ -89,7 +89,7 @@ const NotificationsNew = () => {
     },
   });
 
-  const handleNotificationClick = (notification: any) => {
+  const handleNotificationClick = (notification: Notification) => {
     if (!notification.is_read) {
       markAsReadMutation.mutate(notification.id);
     }
@@ -107,7 +107,7 @@ const NotificationsNew = () => {
     }
   };
 
-  const getNotificationLink = (notification: any) => {
+  const getNotificationLink = (notification: Notification) => {
     switch (notification.type) {
       case 'like':
       case 'comment':
@@ -182,7 +182,7 @@ const NotificationsNew = () => {
               </div>
             ) : (
               <div className="space-y-2">
-                {notifications.map((notification: any, index: number) => {
+                {notifications.map((notification, index: number) => {
                   const Icon = notificationIcons[notification.type as keyof typeof notificationIcons] || Bell;
                   
                   return (

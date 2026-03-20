@@ -110,7 +110,7 @@ export const ProfilePage = () => {
 
   const respondToRequest = useMutation({
     mutationFn: (accept: boolean) =>
-      backendApi.connections.respondToRequest(connectionStatus?.connection_id!, accept),
+      backendApi.connections.respondToRequest(connectionStatus?.connection_id ?? "", accept),
     onSuccess: (_, accept) => {
       toast({ title: accept ? "Connection accepted!" : "Request declined" });
       queryClient.invalidateQueries({ queryKey: ['connectionStatus', profileUserId] });

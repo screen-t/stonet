@@ -102,7 +102,7 @@ const NetworkNew = () => {
   });
 
   // Filter connections based on search
-  const filteredConnections = connections.filter((conn: any) =>
+  const filteredConnections = connections.filter((conn) =>
     `${conn.user?.first_name} ${conn.user?.last_name} ${conn.user?.username}`
       .toLowerCase()
       .includes(searchQuery.toLowerCase())
@@ -172,7 +172,7 @@ const NetworkNew = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredConnections.map((connection: any, index: number) => (
+                {filteredConnections.map((connection, index: number) => (
                   <motion.div
                     key={connection.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -251,7 +251,7 @@ const NetworkNew = () => {
                       Received ({receivedRequests.length})
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {receivedRequests.map((request: any, index: number) => (
+                      {receivedRequests.map((request, index: number) => (
                         <motion.div
                           key={request.id}
                           initial={{ opacity: 0, y: 20 }}
@@ -322,7 +322,7 @@ const NetworkNew = () => {
                       Sent ({sentRequests.length})
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {sentRequests.map((request: any, index: number) => (
+                      {sentRequests.map((request, index: number) => (
                         <motion.div
                           key={request.id}
                           initial={{ opacity: 0, y: 20 }}
@@ -397,7 +397,7 @@ const NetworkNew = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {suggestions.map((suggestion: any, index: number) => (
+                {suggestions.map((suggestion, index: number) => (
                   <motion.div
                     key={suggestion.id}
                     initial={{ opacity: 0, y: 20 }}

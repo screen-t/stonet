@@ -123,7 +123,7 @@ const Settings = () => {
 
   // Mutation to update profile
   const updateProfileMutation = useMutation({
-    mutationFn: (data: any) => backendApi.profile.updateProfile(data),
+    mutationFn: (data: Record<string, unknown>) => backendApi.profile.updateProfile(data),
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['profile', 'me'] });
       await refreshUser();

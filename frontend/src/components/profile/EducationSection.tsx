@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Education } from '@/types/api';
+import { Education, Profile } from '@/types/api';
 import {
   Dialog,
   DialogContent,
@@ -46,13 +46,13 @@ export const EducationSection = ({ userId, isOwnProfile }: EducationSectionProps
       const profile = isOwnProfile
         ? await backendApi.profile.getMyProfile()
         : await backendApi.profile.getProfile(userId);
-      return (profile as any).education || [];
+      return (profile as Profile).education || [];
     },
   });
 
   // Add/Update education
   const saveMutation = useMutation({
-    mutationFn: (data: any) => {
+    mutationFn: (data: Record<string, unknown>) => {
       if (editingItem) {
         return backendApi.profile.updateEducation(editingItem.id, data);
       }
