@@ -284,11 +284,11 @@ export const ProfilePage = () => {
 
         {/* Profile Tabs */}
         <Tabs defaultValue="about" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="about">About</TabsTrigger>
-            <TabsTrigger value="posts">Posts</TabsTrigger>
-            <TabsTrigger value="experience">Experience</TabsTrigger>
-            <TabsTrigger value="education">Education</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 h-auto gap-0">
+            <TabsTrigger value="about" className="text-xs md:text-sm py-2 md:py-3 px-1 md:px-4">About</TabsTrigger>
+            <TabsTrigger value="posts" className="text-xs md:text-sm py-2 md:py-3 px-1 md:px-4">Posts</TabsTrigger>
+            <TabsTrigger value="experience" className="text-xs md:text-sm py-2 md:py-3 px-1 md:px-4">Experience</TabsTrigger>
+            <TabsTrigger value="education" className="text-xs md:text-sm py-2 md:py-3 px-1 md:px-4">Education</TabsTrigger>
           </TabsList>
 
           <TabsContent value="about" className="space-y-6">
